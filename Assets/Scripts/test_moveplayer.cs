@@ -52,7 +52,7 @@ public class test_moveplayer : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        hp = 3;
+        hp = 10;
         color = gameObject.GetComponent<SpriteRenderer>();
     }
     // Update is called once per frame
@@ -67,6 +67,10 @@ public class test_moveplayer : MonoBehaviour
         if (hp == 0)
         {
             SceneManager.LoadScene(1);
+        }
+        if (!Damaged)
+        {
+            color.color = Color.white;
         }
 
  
@@ -230,7 +234,7 @@ public class test_moveplayer : MonoBehaviour
         while (Damaged)
         {
             color.color = Color.black;
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.2f);
             color.color = Color.white;
             yield return new WaitForSeconds(0.5f);
         }
