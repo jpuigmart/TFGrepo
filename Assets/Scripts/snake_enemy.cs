@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class snake_enemy : MonoBehaviour
 {
@@ -25,6 +26,8 @@ public class snake_enemy : MonoBehaviour
     public bool change;
     public int random_int;
     public Animator animator;
+
+
     private void Awake()
     {
         snake=transform.GetComponent<snake_enemy>();
@@ -41,7 +44,6 @@ public class snake_enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(isGrounded);
         snake.animator.SetFloat("speed",(float)Mathf.Abs(velocity.x));
         if (Physics2D.Raycast(snake.left_ground_point.transform.position,Vector2.down,0.1f))
         {

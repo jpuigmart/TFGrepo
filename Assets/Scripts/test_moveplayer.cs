@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class test_moveplayer : MonoBehaviour
 {
@@ -47,13 +48,16 @@ public class test_moveplayer : MonoBehaviour
     [Header("Stats")]
     public int hp;
     public SpriteRenderer color;
+    private Image[] lifes;
+    public GameObject lifeUI;
 
     Vector2 movement;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        hp = 10;
+        hp = 3;
         color = gameObject.GetComponent<SpriteRenderer>();
+        lifes = lifeUI.GetComponentsInChildren<Image>();
     }
     // Update is called once per frame
     void Start()
@@ -204,6 +208,7 @@ public class test_moveplayer : MonoBehaviour
     public void doDamage()
     {
         this.hp -= 1;
+        lifes[hp].gameObject.SetActive(false);
         cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
         if (rb.velocity.x < 0)
         {
