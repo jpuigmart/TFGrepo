@@ -10,6 +10,7 @@ public class DialogeManager : MonoBehaviour
     public TextMeshProUGUI dialogueText;
     private Queue<string> sentences;
     public GameObject DialogueBox;
+    public test_moveplayer player;
     // Start is called before the first frame update
     void Start()
     {
@@ -18,6 +19,9 @@ public class DialogeManager : MonoBehaviour
 
     public void StartDialogue (Dialogue dialogue)
     {
+        DialogueBox.SetActive(true);
+        player.inDialogue = true;
+
         sentences.Clear();
 
         nameText.text = dialogue.name;
@@ -43,6 +47,9 @@ public class DialogeManager : MonoBehaviour
     }
     void EndDialogue()
     {
+
         DialogueBox.SetActive(false);
+        player.inDialogue = false;
+        StartCoroutine(player.canStartDialogue());
     }
 }

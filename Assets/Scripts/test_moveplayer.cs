@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -59,12 +61,18 @@ public class test_moveplayer : MonoBehaviour
     public AudioManager audiomanager;
     public GameObject dialogueBox;
     public DialogeManager dialogueManager;
+    public bool inDialogue;
+    public bool canDialogue;
+    public TextMeshProUGUI finalSentence;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         hp = 3;
         color = gameObject.GetComponent<SpriteRenderer>();
+        audiomanager = FindObjectOfType<AudioManager>();
         dialogueBox.SetActive(false);
+        inDialogue = false;
+        canDialogue = true;
     }
     // Update is called once per frame
     void Start()
@@ -76,143 +84,167 @@ public class test_moveplayer : MonoBehaviour
     }
     void Update()
     {
-        animator.SetBool("damaged", _retroceso);
-        animator.SetBool("death", death);
-        if (!death)
+        if (inDialogue)
         {
-            if (!Damaged)
+            canDialogue = false;
+            if (Input.GetKeyDown(KeyCode.E))
             {
-                color.color = Color.white;
-            }
-
-
-            #region Inputs
-            moveInput = Input.GetAxis("Horizontal");
-            animator.SetFloat("Speed", Mathf.Abs(moveInput));
-            if (!_retroceso)
-            {
-                if (Input.GetKey(KeyCode.C) && !isJumping)
+                dialogueManager.DisplayNextSentence();
+                if (finalSentence.text == "Gracias por jugar!")
                 {
-                    lastJumpTime = jumpBufferTime;
-                    if (isLeft && dustInstance == null)
-                    {
-                        dustInstance = Instantiate(dust, groundCheckPoint.transform.position + Vector3.right, Quaternion.identity);
-
-                    }
-                    else if (dustInstance == null && !isLeft)
-                    {
-                        dustInstance = Instantiate(dust, groundCheckPoint.transform.position - Vector3.right, Quaternion.identity);
-                    }
-                    Destroy(dustInstance.gameObject, 0.5f);
-                }
-                if (Input.GetKeyUp(KeyCode.C))
-                {
-                    OnJumpUp();
+                    audiomanager.Stop("Theme");
+                    SceneManager.LoadScene("Credits");
                 }
             }
-            #endregion
-            #region Checks
 
-
-            if (rb.velocity.y <= 0 && jumpInputReleased)
-            {
-                isJumping = false;
-            }
-            #endregion
-            #region Jump
-            if (lastGroundedTime > 0 && lastJumpTime > 0 && !isJumping)
-            {
-                Jump();
-            }
-            #endregion
-            #region Timer
-            lastGroundedTime -= Time.deltaTime;
-            lastJumpTime -= Time.deltaTime;
-            #endregion
-            if (moveInput > 0.01f)
-            {
-                isLeft = false;
-                dust.transform.localScale = new Vector3(5, 5, 0);
-                transform.localScale = new Vector3(10, 10, 1);
-            }
-            if (moveInput < 0)
-            {
-                isLeft = true;
-                dust.transform.localScale = new Vector3(-5, 5, 0);
-                transform.localScale = new Vector3(-10, 10, 1);
-            }
         }
-        if (Physics2D.OverlapBox(groundCheckPoint.position, groundCheckSize, 0, groundLayer))
+        else
         {
-            lastGroundedTime = jumpInFallTime;
-            animator.SetBool("isJumping", false);
-            if (Mathf.Abs(rb.velocity.x) > 0.01)
+            animator.SetBool("damaged", _retroceso);
+            animator.SetBool("death", death);
+            if (!death)
             {
-                audiomanager.Unpause("Run");
+                if (!Damaged)
+                {
+                    color.color = Color.white;
+                }
+
+
+                #region Inputs
+                moveInput = Input.GetAxis("Horizontal");
+                animator.SetFloat("Speed", Mathf.Abs(moveInput));
+                if (!_retroceso)
+                {
+                    if (Input.GetKey(KeyCode.C) && !isJumping)
+                    {
+                        lastJumpTime = jumpBufferTime;
+                        if (isLeft && dustInstance == null)
+                        {
+                            dustInstance = Instantiate(dust, groundCheckPoint.transform.position + Vector3.right, Quaternion.identity);
+
+                        }
+                        else if (dustInstance == null && !isLeft)
+                        {
+                            dustInstance = Instantiate(dust, groundCheckPoint.transform.position - Vector3.right, Quaternion.identity);
+                        }
+                        Destroy(dustInstance.gameObject, 0.5f);
+                    }
+                    if (Input.GetKeyUp(KeyCode.C))
+                    {
+                        OnJumpUp();
+                    }
+                }
+                #endregion
+                #region Checks
+
+
+                if (rb.velocity.y <= 0 && jumpInputReleased)
+                {
+                    isJumping = false;
+                }
+                #endregion
+                #region Jump
+                if (lastGroundedTime > 0 && lastJumpTime > 0 && !isJumping)
+                {
+                    Jump();
+                }
+                #endregion
+                #region Timer
+                lastGroundedTime -= Time.deltaTime;
+                lastJumpTime -= Time.deltaTime;
+                #endregion
+                if (moveInput > 0.01f)
+                {
+                    isLeft = false;
+                    dust.transform.localScale = new Vector3(5, 5, 0);
+                    transform.localScale = new Vector3(10, 10, 1);
+                }
+                if (moveInput < 0)
+                {
+                    isLeft = true;
+                    dust.transform.localScale = new Vector3(-5, 5, 0);
+                    transform.localScale = new Vector3(-10, 10, 1);
+                }
+            }
+            if (Physics2D.OverlapBox(groundCheckPoint.position, groundCheckSize, 0, groundLayer))
+            {
+                lastGroundedTime = jumpInFallTime;
+                animator.SetBool("isJumping", false);
+                if (Mathf.Abs(rb.velocity.x) > 0.01)
+                {
+                    audiomanager.Unpause("Run");
+                }
+                else
+                {
+                    audiomanager.Pause("Run");
+                }
             }
             else
             {
                 audiomanager.Pause("Run");
+                animator.SetBool("isJumping", true);
             }
-        }
-        else
-        {
-            audiomanager.Pause("Run");
-            animator.SetBool("isJumping", true);
         }
     }
 
     void FixedUpdate()
     {
-        if (!death)
+        if (inDialogue)
         {
-            if (!_retroceso)
+
+        }
+        else
+        {
+            if (!death)
             {
-                #region Run
-                float targetSpeed = moveInput * moveSpeed;
-
-                float speedDif = targetSpeed - rb.velocity.x;
-
-                float accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? acceleration : decceleration;
-
-                float movement = Mathf.Pow(Mathf.Abs(speedDif) * accelRate, velPower) * Mathf.Sign(speedDif);
-
-                rb.AddForce(movement * Vector2.right);
-            }
-            #endregion
-            #region Friction
-            if (lastGroundedTime > 0 && Mathf.Abs(moveInput) < 0.01f)
-            {
-                float amount = Mathf.Min(Mathf.Abs(rb.velocity.x), Mathf.Abs(frictionAmount));
-
-                amount *= Mathf.Sign(rb.velocity.x);
                 if (!_retroceso)
                 {
-                    rb.AddForce(Vector2.right * -amount, ForceMode2D.Impulse);
+                    #region Run
+                    float targetSpeed = moveInput * moveSpeed;
+
+                    float speedDif = targetSpeed - rb.velocity.x;
+
+                    float accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? acceleration : decceleration;
+
+                    float movement = Mathf.Pow(Mathf.Abs(speedDif) * accelRate, velPower) * Mathf.Sign(speedDif);
+
+                    rb.AddForce(movement * Vector2.right);
+                }
+                #endregion
+                #region Friction
+                if (lastGroundedTime > 0 && Mathf.Abs(moveInput) < 0.01f)
+                {
+                    float amount = Mathf.Min(Mathf.Abs(rb.velocity.x), Mathf.Abs(frictionAmount));
+
+                    amount *= Mathf.Sign(rb.velocity.x);
+                    if (!_retroceso)
+                    {
+                        rb.AddForce(Vector2.right * -amount, ForceMode2D.Impulse);
+                    }
+                }
+                #endregion
+
+            }
+            else
+            {
+
+                if (!_retroceso)
+                {
+                    StartCoroutine(animationDeath());
+
                 }
             }
-            #endregion
-
-        }
-        else
-        {
-
-            if (!_retroceso)
+            #region Jump Gravity
+            if (rb.velocity.y < 0 && lastGroundedTime <= 0)
             {
-                StartCoroutine(animationDeath());
-
+                rb.gravityScale = gravityScale * fallGravityMultiplier;
             }
+            else
+            {
+                rb.gravityScale = gravityScale;
+            }
+            #endregion
         }
-        #region Jump Gravity
-        if (rb.velocity.y < 0 && lastGroundedTime <= 0)
-        {
-            rb.gravityScale = gravityScale * fallGravityMultiplier;
-        }
-        else
-        {
-            rb.gravityScale = gravityScale;
-        }
-        #endregion
     }
     private void Jump()
     {
@@ -257,19 +289,18 @@ public class test_moveplayer : MonoBehaviour
         {
             if (Input.GetKeyUp(KeyCode.E))
             {
-
-                if (dialogueBox.gameObject.activeInHierarchy)
-                {
-                    Debug.Log("Hola");
-                    dialogueManager.DisplayNextSentence();
-                }
-                else
+                if (!inDialogue && canDialogue)
                 {
                     collision.gameObject.GetComponent<DialogueTrigger>().TriggerDialogue();
-                    dialogueBox.SetActive(true);
                 }
-                
-                
+                if (!gamemanager.questPickup && !gamemanager.questPickupFinished)
+                {
+                    gamemanager.QuestActive();
+                }
+                if(gamemanager.questPickupFinished)
+                {
+                    gamemanager.QuestFinish();
+                }
             }
         }
     }
@@ -328,5 +359,10 @@ public class test_moveplayer : MonoBehaviour
     {
         yield return new WaitForSeconds(3f);
         gamemanager.deathScene();
+    }
+    public IEnumerator canStartDialogue()
+    {
+        yield return new WaitForSeconds(1f);
+        canDialogue = true;
     }
 }
