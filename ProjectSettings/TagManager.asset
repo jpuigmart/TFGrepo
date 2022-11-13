@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Enemy
   - Ground
+  - Pickup
+  - quest
+  - dialogue
   layers:
   - Default
   - TransparentFX

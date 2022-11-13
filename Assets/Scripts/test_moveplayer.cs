@@ -40,6 +40,8 @@ public class test_moveplayer : MonoBehaviour
     [Space(10)]
     public LayerMask groundLayer;
     public bool Damaged = false;
+    public bool death;
+    public bool animationDie;
 
     public Animator animator;
     public bool isLeft = false;
@@ -48,119 +50,159 @@ public class test_moveplayer : MonoBehaviour
     [Header("Stats")]
     public int hp;
     public SpriteRenderer color;
-    private Image[] lifes;
-    public GameObject lifeUI;
 
+    public GameObject dust;
+    private GameObject dustInstance;
     Vector2 movement;
+    public GameMan gamemanager;
+    public bool newAtac = true;
+    public AudioManager audiomanager;
+    public GameObject dialogueBox;
+    public DialogeManager dialogueManager;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         hp = 3;
         color = gameObject.GetComponent<SpriteRenderer>();
-        lifes = lifeUI.GetComponentsInChildren<Image>();
+        dialogueBox.SetActive(false);
     }
     // Update is called once per frame
     void Start()
     {
         gravityScale = rb.gravityScale;
-        
+        death = false;
+        animationDie = false;
+        isLeft = true;
     }
     void Update()
     {
         animator.SetBool("damaged", _retroceso);
-        if (hp == 0)
+        animator.SetBool("death", death);
+        if (!death)
         {
-            SceneManager.LoadScene(1);
-        }
-        if (!Damaged)
-        {
-            color.color = Color.white;
-        }
+            if (!Damaged)
+            {
+                color.color = Color.white;
+            }
 
- 
-        #region Inputs
-        moveInput = Input.GetAxis("Horizontal");
-        animator.SetFloat("Speed", Mathf.Abs(moveInput));
-        if (!_retroceso)
-        {
-            if (Input.GetKey(KeyCode.C))
+
+            #region Inputs
+            moveInput = Input.GetAxis("Horizontal");
+            animator.SetFloat("Speed", Mathf.Abs(moveInput));
+            if (!_retroceso)
             {
-                lastJumpTime = jumpBufferTime;
+                if (Input.GetKey(KeyCode.C) && !isJumping)
+                {
+                    lastJumpTime = jumpBufferTime;
+                    if (isLeft && dustInstance == null)
+                    {
+                        dustInstance = Instantiate(dust, groundCheckPoint.transform.position + Vector3.right, Quaternion.identity);
+
+                    }
+                    else if (dustInstance == null && !isLeft)
+                    {
+                        dustInstance = Instantiate(dust, groundCheckPoint.transform.position - Vector3.right, Quaternion.identity);
+                    }
+                    Destroy(dustInstance.gameObject, 0.5f);
+                }
+                if (Input.GetKeyUp(KeyCode.C))
+                {
+                    OnJumpUp();
+                }
             }
-            if (Input.GetKeyUp(KeyCode.C))
+            #endregion
+            #region Checks
+
+
+            if (rb.velocity.y <= 0 && jumpInputReleased)
             {
-                OnJumpUp();
+                isJumping = false;
+            }
+            #endregion
+            #region Jump
+            if (lastGroundedTime > 0 && lastJumpTime > 0 && !isJumping)
+            {
+                Jump();
+            }
+            #endregion
+            #region Timer
+            lastGroundedTime -= Time.deltaTime;
+            lastJumpTime -= Time.deltaTime;
+            #endregion
+            if (moveInput > 0.01f)
+            {
+                isLeft = false;
+                dust.transform.localScale = new Vector3(5, 5, 0);
+                transform.localScale = new Vector3(10, 10, 1);
+            }
+            if (moveInput < 0)
+            {
+                isLeft = true;
+                dust.transform.localScale = new Vector3(-5, 5, 0);
+                transform.localScale = new Vector3(-10, 10, 1);
             }
         }
-        #endregion
-        #region Checks
-        if (Physics2D.OverlapBox(groundCheckPoint.position,groundCheckSize,0,groundLayer))
+        if (Physics2D.OverlapBox(groundCheckPoint.position, groundCheckSize, 0, groundLayer))
         {
             lastGroundedTime = jumpInFallTime;
             animator.SetBool("isJumping", false);
+            if (Mathf.Abs(rb.velocity.x) > 0.01)
+            {
+                audiomanager.Unpause("Run");
+            }
+            else
+            {
+                audiomanager.Pause("Run");
+            }
         }
         else
         {
+            audiomanager.Pause("Run");
             animator.SetBool("isJumping", true);
-        }
-
-        if (rb.velocity.y <= 0 && jumpInputReleased)
-        {
-            isJumping = false;
-        }
-        #endregion
-        #region Jump
-        if (lastGroundedTime > 0 && lastJumpTime > 0 && !isJumping)
-        {
-            Jump();
-        }
-        #endregion
-        #region Timer
-        lastGroundedTime -= Time.deltaTime;
-        lastJumpTime -= Time.deltaTime;
-        #endregion
-        if (moveInput > 0.01f)
-        {
-            isLeft = false;
-            transform.localScale = new Vector3(10,10,1);
-        }
-        if (moveInput < 0)
-        {
-            isLeft = true;
-            transform.localScale = new Vector3(-10, 10, 1);
         }
     }
 
     void FixedUpdate()
     {
-        if (!_retroceso)
+        if (!death)
         {
-            #region Run
-            float targetSpeed = moveInput * moveSpeed;
-
-            float speedDif = targetSpeed - rb.velocity.x;
-
-            float accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? acceleration : decceleration;
-
-            float movement = Mathf.Pow(Mathf.Abs(speedDif) * accelRate, velPower) * Mathf.Sign(speedDif);
-
-            rb.AddForce(movement * Vector2.right);
-        }
-        #endregion 
-        //movement = new Vector2(horizontalMove, 0f);
-        //rb.velocity = new Vector2(horizontalMove*speed,rb.velocity.y);
-        #region Friction
-        if (lastGroundedTime > 0 && Mathf.Abs(moveInput) < 0.01f)
-        {
-            float amount = Mathf.Min(Mathf.Abs(rb.velocity.x), Mathf.Abs(frictionAmount));
-
-            amount *= Mathf.Sign(rb.velocity.x);
             if (!_retroceso)
             {
-                rb.AddForce(Vector2.right * -amount, ForceMode2D.Impulse);
+                #region Run
+                float targetSpeed = moveInput * moveSpeed;
+
+                float speedDif = targetSpeed - rb.velocity.x;
+
+                float accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? acceleration : decceleration;
+
+                float movement = Mathf.Pow(Mathf.Abs(speedDif) * accelRate, velPower) * Mathf.Sign(speedDif);
+
+                rb.AddForce(movement * Vector2.right);
+            }
+            #endregion
+            #region Friction
+            if (lastGroundedTime > 0 && Mathf.Abs(moveInput) < 0.01f)
+            {
+                float amount = Mathf.Min(Mathf.Abs(rb.velocity.x), Mathf.Abs(frictionAmount));
+
+                amount *= Mathf.Sign(rb.velocity.x);
+                if (!_retroceso)
+                {
+                    rb.AddForce(Vector2.right * -amount, ForceMode2D.Impulse);
+                }
+            }
+            #endregion
+
+        }
+        else
+        {
+
+            if (!_retroceso)
+            {
+                StartCoroutine(animationDeath());
+
             }
         }
-        #endregion
         #region Jump Gravity
         if (rb.velocity.y < 0 && lastGroundedTime <= 0)
         {
@@ -199,18 +241,45 @@ public class test_moveplayer : MonoBehaviour
     {
         if (collision.tag == "Enemy")
         {
-            if (!Damaged)
+
+            if (!Damaged && !death && newAtac)
             {
                 doDamage();
+            }
+        }
+        if (collision.tag == "Pickup")
+        {
+            gamemanager.updatePickup();
+            audiomanager.Play("Coin");
+            Destroy(collision.gameObject);
+        }
+        if (collision.tag == "dialogue")
+        {
+            if (Input.GetKeyUp(KeyCode.E))
+            {
+
+                if (dialogueBox.gameObject.activeInHierarchy)
+                {
+                    Debug.Log("Hola");
+                    dialogueManager.DisplayNextSentence();
+                }
+                else
+                {
+                    collision.gameObject.GetComponent<DialogueTrigger>().TriggerDialogue();
+                    dialogueBox.SetActive(true);
+                }
+                
+                
             }
         }
     }
     public void doDamage()
     {
         this.hp -= 1;
-        lifes[hp].gameObject.SetActive(false);
+        gamemanager.takeDamage();
+        audiomanager.Play("hurt");
         cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
-        if (rb.velocity.x < 0)
+        if (isLeft)
         {
             rb.AddForce(new Vector2(10, 10), ForceMode2D.Impulse);
         }
@@ -220,7 +289,16 @@ public class test_moveplayer : MonoBehaviour
         }
         StartCoroutine(retroceso());
         StartCoroutine(cooldownDamage());
-        StartCoroutine(damageChangeColor());
+        if (hp != 0)
+        {
+            StartCoroutine(damageChangeColor());
+        }
+        if (hp == 0)
+        {
+            death = true;
+            audiomanager.Stop("Theme");
+            rb.velocity = Vector3.zero;
+        }
     }
     IEnumerator cooldownDamage()
     {
@@ -236,13 +314,19 @@ public class test_moveplayer : MonoBehaviour
     }
     IEnumerator damageChangeColor()
     {
+        newAtac = false;
         while (Damaged)
         {
             color.color = Color.black;
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.1f);
             color.color = Color.white;
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.4f);
         }
-
+        newAtac = true;
+    }
+    IEnumerator animationDeath()
+    {
+        yield return new WaitForSeconds(3f);
+        gamemanager.deathScene();
     }
 }
