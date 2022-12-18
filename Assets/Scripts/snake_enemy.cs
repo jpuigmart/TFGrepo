@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using UnityEditor.Build.Content;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,13 +20,16 @@ public class snake_enemy : MonoBehaviour
     private bool isLeft;
     public bool isImpact;
     public Rigidbody2D rb_enemy;
-    private snake_enemy snake;
+    public snake_enemy snake;
     public float speed;
     public Vector3 velocity;
     public bool detect;
     public bool change;
     public int random_int;
     public Animator animator;
+    public int hp;
+    public GameMan gammemanager;
+    public bool hurt;
 
 
     private void Awake()
@@ -33,6 +37,8 @@ public class snake_enemy : MonoBehaviour
         snake=transform.GetComponent<snake_enemy>();
         snake.detect = true;
         snake.change = true;
+        snake.hurt = false;
+        snake.hp = 2;
     }
     // Start is called before the first frame update
     void Start()
@@ -45,6 +51,7 @@ public class snake_enemy : MonoBehaviour
     void Update()
     {
         snake.animator.SetFloat("speed",(float)Mathf.Abs(velocity.x));
+        snake.animator.SetBool("hurt", hurt);
         if (Physics2D.Raycast(snake.left_ground_point.transform.position,Vector2.down,0.1f))
         {
             snake.isGrounded = true;
@@ -68,23 +75,30 @@ public class snake_enemy : MonoBehaviour
         {
             snake.isImpact = false;
         }
-        if (snake.change && snake.detect)
+        if (!hurt)
         {
-            snake.random_int = UnityEngine.Random.Range(1, 3);
+            if (snake.change && snake.detect)
+            {
+                snake.random_int = UnityEngine.Random.Range(1, 3);
 
-            if (snake.random_int == 1)
-            {
-                snake.velocity = Vector3.zero;
+                if (snake.random_int == 1)
+                {
+                    snake.velocity = Vector3.zero;
+                }
+                if (snake.random_int == 2)
+                {
+                    snake.velocity = new Vector3(1 * speed, 0, 0);
+                }
+                if (snake.random_int == 3)
+                {
+                    snake.velocity = new Vector3(-1 * speed, 0, 0);
+                }
+                StartCoroutine(snake.changeDirection());
             }
-            if (snake.random_int == 2)
-            {
-                snake.velocity = new Vector3(1 * speed, 0, 0);
-            }
-            if (snake.random_int == 3)
-            {
-                snake.velocity = new Vector3(-1 * speed, 0, 0);
-            }    
-            StartCoroutine(snake.changeDirection());
+        }
+        else
+        {
+            snake.velocity = Vector3.zero;
         }
         if (snake.velocity.x > 0)
         {
@@ -111,5 +125,22 @@ public class snake_enemy : MonoBehaviour
         snake.change = false;
         yield return new WaitForSeconds(2f);
         snake.change = true;
+    }
+    IEnumerator hurting()
+    {
+        snake.hurt = true;
+        yield return new WaitForSeconds(0.4f);
+        snake.hurt = false;
+    }
+    public void takeDamage()
+    {
+        snake.hp -= 1;
+        StartCoroutine(hurting());
+        if (snake.hp == 0)
+        {
+            gammemanager.updateSnake();
+            Destroy(snake.gameObject);
+
+        }
     }
 }

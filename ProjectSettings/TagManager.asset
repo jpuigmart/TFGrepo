@@ -9,11 +9,13 @@ TagManager:
   - Pickup
   - quest
   - dialogue
+  - Potion
+  - Snake
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Enemies
   - Water
   - UI
   - Ground

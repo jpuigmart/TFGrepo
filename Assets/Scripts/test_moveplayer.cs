@@ -16,6 +16,11 @@ public class test_moveplayer : MonoBehaviour
     public float acceleration;
     public float decceleration;
     public float velPower;
+    [Header("Dash")]
+    public float moveDash = 18f;
+    public float accelerationDash;
+    public float deccelerationDash;
+    public float dashPower;
     [Space(10)]
     private float moveInput;
     [Space(10)]
@@ -39,8 +44,10 @@ public class test_moveplayer : MonoBehaviour
     [Header("Checks")]
     public Transform groundCheckPoint;
     public Vector2 groundCheckSize;
+    public bool attacking;
     [Space(10)]
     public LayerMask groundLayer;
+    public LayerMask enemiesLayer;
     public bool Damaged = false;
     public bool death;
     public bool animationDie;
@@ -63,7 +70,11 @@ public class test_moveplayer : MonoBehaviour
     public DialogeManager dialogueManager;
     public bool inDialogue;
     public bool canDialogue;
+    public bool canDash;
+    public bool dashing;
+    public bool canAtack;
     public TextMeshProUGUI finalSentence;
+    public GameObject hitboxSword;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -73,6 +84,10 @@ public class test_moveplayer : MonoBehaviour
         dialogueBox.SetActive(false);
         inDialogue = false;
         canDialogue = true;
+        canDash = true;
+        dashing = false;
+        attacking = false;
+        canAtack = true;
     }
     // Update is called once per frame
     void Start()
@@ -84,6 +99,15 @@ public class test_moveplayer : MonoBehaviour
     }
     void Update()
     {
+        animator.SetBool("damaged", _retroceso);
+        animator.SetBool("death", death);
+        animator.SetBool("dash", dashing);
+        animator.SetFloat("Speed", Mathf.Abs(moveInput));
+        if (!dashing)
+        {
+            moveInput = Input.GetAxis("Horizontal");
+        }
+
         if (inDialogue)
         {
             canDialogue = false;
@@ -100,8 +124,7 @@ public class test_moveplayer : MonoBehaviour
         }
         else
         {
-            animator.SetBool("damaged", _retroceso);
-            animator.SetBool("death", death);
+
             if (!death)
             {
                 if (!Damaged)
@@ -109,11 +132,7 @@ public class test_moveplayer : MonoBehaviour
                     color.color = Color.white;
                 }
 
-
-                #region Inputs
-                moveInput = Input.GetAxis("Horizontal");
-                animator.SetFloat("Speed", Mathf.Abs(moveInput));
-                if (!_retroceso)
+                if (!_retroceso | !dashing)
                 {
                     if (Input.GetKey(KeyCode.C) && !isJumping)
                     {
@@ -134,10 +153,15 @@ public class test_moveplayer : MonoBehaviour
                         OnJumpUp();
                     }
                 }
-                #endregion
+
                 #region Checks
 
+                if (Input.GetKeyDown(KeyCode.X) && canAtack)
+                {
+                    animator.SetTrigger("attack");
 
+                    StartCoroutine(makeAttack());
+                }
                 if (rb.velocity.y <= 0 && jumpInputReleased)
                 {
                     isJumping = false;
@@ -165,11 +189,22 @@ public class test_moveplayer : MonoBehaviour
                     dust.transform.localScale = new Vector3(-5, 5, 0);
                     transform.localScale = new Vector3(-10, 10, 1);
                 }
+                if (canDash)
+                {
+                    if (Input.GetKeyDown(KeyCode.Z))
+                    {
+                        StartCoroutine(makeDash());
+                    }
+                }
             }
             if (Physics2D.OverlapBox(groundCheckPoint.position, groundCheckSize, 0, groundLayer))
             {
                 lastGroundedTime = jumpInFallTime;
                 animator.SetBool("isJumping", false);
+                if (!dashing)
+                {
+                    canDash = true;
+                }
                 if (Mathf.Abs(rb.velocity.x) > 0.01)
                 {
                     audiomanager.Unpause("Run");
@@ -191,13 +226,13 @@ public class test_moveplayer : MonoBehaviour
     {
         if (inDialogue)
         {
-
+            rb.velocity = Vector2.zero;
         }
         else
         {
             if (!death)
             {
-                if (!_retroceso)
+                if (!_retroceso && !dashing)
                 {
                     #region Run
                     float targetSpeed = moveInput * moveSpeed;
@@ -244,6 +279,30 @@ public class test_moveplayer : MonoBehaviour
                 rb.gravityScale = gravityScale;
             }
             #endregion
+            if (dashing)
+            {
+                rb.gravityScale = 0f;
+                float modifier;
+                if (isLeft)
+                {
+                    modifier = -1f;
+                    
+                }
+                else
+                {
+                    modifier = 1f;
+                }
+
+                float targetSpeed = modifier * moveDash;
+
+                float speedDif = targetSpeed - rb.velocity.x;
+
+                float accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? accelerationDash : deccelerationDash;
+
+                float movement = Mathf.Pow(Mathf.Abs(speedDif) * accelRate, dashPower) * Mathf.Sign(speedDif);
+
+                rb.AddForce(movement * Vector2.right);
+            }
         }
     }
     private void Jump()
@@ -271,7 +330,7 @@ public class test_moveplayer : MonoBehaviour
     }
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.tag == "Enemy")
+        if (collision.tag == gamemanager.enemytags[0] | collision.tag == gamemanager.enemytags[1] | collision.tag == gamemanager.enemytags[2])
         {
 
             if (!Damaged && !death && newAtac)
@@ -284,6 +343,16 @@ public class test_moveplayer : MonoBehaviour
             gamemanager.updatePickup();
             audiomanager.Play("Coin");
             Destroy(collision.gameObject);
+        }
+        if (collision.tag == "Potion")
+        {
+            if (this.hp < 3)
+            {
+                this.hp += 1;
+                gamemanager.takeHeal();
+                Destroy(collision.gameObject);
+            }
+
         }
         if (collision.tag == "dialogue")
         {
@@ -306,10 +375,16 @@ public class test_moveplayer : MonoBehaviour
     }
     public void doDamage()
     {
+        if (dashing)
+        {
+            dashing = false;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
         this.hp -= 1;
         gamemanager.takeDamage();
         audiomanager.Play("hurt");
         cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
+        rb.velocity = Vector2.zero;
         if (isLeft)
         {
             rb.AddForce(new Vector2(10, 10), ForceMode2D.Impulse);
@@ -360,9 +435,42 @@ public class test_moveplayer : MonoBehaviour
         yield return new WaitForSeconds(3f);
         gamemanager.deathScene();
     }
+    IEnumerator makeDash()
+    {
+        dashing = true;
+        canDash = false;
+        rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
+        yield return new WaitForSeconds(0.5f);
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        dashing = false;
+
+    }
     public IEnumerator canStartDialogue()
     {
         yield return new WaitForSeconds(1f);
         canDialogue = true;
+    }
+    void attack()
+    {
+
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(hitboxSword.transform.position, 1f, enemiesLayer);
+        foreach (Collider2D hit in hitEnemies)
+        {
+            if (hit.tag == "Snake")
+            {
+                snake_enemy enemy = hit.transform.GetComponent<snake_enemy>();
+                enemy.takeDamage();
+                cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
+            }
+
+        }
+    }
+    IEnumerator makeAttack()
+    {
+        canAtack = false;
+        yield return new WaitForSeconds(0.2f);
+        attack();
+        yield return new WaitForSeconds(0.2f);
+        canAtack = true;
     }
 }

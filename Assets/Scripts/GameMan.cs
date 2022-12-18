@@ -5,9 +5,11 @@ using UnityEngine.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using Newtonsoft.Json.Serialization;
 
 public class GameMan : MonoBehaviour
 {
+    public List<string> enemytags = new List<string>();        
     public static bool isGamePause = false;
     // Start is called before the first frame update
     public GameObject menuUI;
@@ -16,9 +18,12 @@ public class GameMan : MonoBehaviour
     public GameObject lifeUI;
     public test_moveplayer player;
     public GameObject[] pickups;
+    public GameObject[] snakes;
     public TextMeshProUGUI quest;
-    private int pickupget; 
+    private int pickupget;
+    private int snakekill;
     private string totalPickups;
+    private string totalSnakes;
     public bool questPickup;
     public bool questPickupFinished;
     public GameObject startQuest;
@@ -26,24 +31,51 @@ public class GameMan : MonoBehaviour
     public DialogueTrigger NPCavi;
     void Start()
     {
+        quest.gameObject.SetActive(false);
+        if (SceneManager.GetActiveScene().name == "Game")
+        {
+            pickups = GameObject.FindGameObjectsWithTag("Pickup");
+            snakes = GameObject.FindGameObjectsWithTag("Snake");
+            foreach (GameObject snk in snakes)
+            {
+                snk.gameObject.SetActive(false);
+            }
+            foreach (GameObject pickup in pickups)
+            {
+                pickup.gameObject.SetActive(false);
+            }
+            totalPickups = pickups.Length.ToString();
+            totalSnakes = snakes.Length.ToString();
+
+            questPickup = false;
+            snakekill = 0;
+            pickupget = 0;
+            startQuest.gameObject.SetActive(true);
+            questCompleted.gameObject.SetActive(false);
+            questPickupFinished = false;
+        }
         menuUI.SetActive(false);
         lifes = lifeUI.GetComponentsInChildren<Image>();
-        pickups = GameObject.FindGameObjectsWithTag("Pickup");
-        foreach(GameObject pickup in pickups)
-        {
-            pickup.gameObject.SetActive(false);
-        }
-        totalPickups = pickups.Length.ToString();
-        quest.gameObject.SetActive(false);
-        questPickup = false;
-        pickupget = 0;
-        startQuest.gameObject.SetActive(true);
-        questCompleted.gameObject.SetActive(false);
-        questPickupFinished = false;
+
+        enemytags.Add("Snake");
+        enemytags.Add("Hyena");
+        enemytags.Add("Voltor");
     }
     void LateUpdate()
     {
-        quest.text = "Monedas recogidas :" + pickupget.ToString() + "/" + totalPickups;
+
+        if (SceneManager.GetActiveScene().name == "Game")
+        {
+            quest.text = "Monedas recogidas :" + pickupget.ToString() + "/" + totalPickups + "\n Serpientes eliminadas :" + snakekill.ToString() + "/" + totalSnakes;
+            if (pickupget.ToString() == totalPickups && snakekill.ToString() == totalSnakes && questPickup)
+            {
+                questCompleted.gameObject.SetActive(true);
+                NPCavi.dialogue.sentences[0] = "Muy bien has conseguido todas las monedas";
+                NPCavi.dialogue.sentences[1] = "Gracias por jugar!";
+                questPickupFinished = true;
+            }
+        }
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (isGamePause)
@@ -54,13 +86,6 @@ public class GameMan : MonoBehaviour
             {
                 Pause();
             }
-        }
-        if (pickupget.ToString() == totalPickups && questPickup)
-        {
-            questCompleted.gameObject.SetActive(true);
-            NPCavi.dialogue.sentences[0] = "Muy bien has conseguido todas las monedas";
-            NPCavi.dialogue.sentences[1] = "Gracias por jugar!";
-            questPickupFinished = true;
         }
 
     }
@@ -81,6 +106,11 @@ public class GameMan : MonoBehaviour
     {
         lifes[player.hp].gameObject.SetActive(false);
     }
+    public void takeHeal()
+    {
+        Debug.Log(player.hp);
+        lifes[player.hp-1].gameObject.SetActive(true);
+    }
     public void deathScene()
     {
         SceneManager.LoadScene("Game Over");
@@ -89,16 +119,24 @@ public class GameMan : MonoBehaviour
     {
         pickupget += 1;
     }
+    public void updateSnake()
+    {
+        snakekill += 1;
+    }
     public void QuestActive()
     {
         foreach (GameObject pickup in pickups)
         {
             pickup.gameObject.SetActive(true);
         }
+        foreach (GameObject snk in snakes)
+        {
+            snk.gameObject.SetActive(true);
+        }
         questPickup = true;
         quest.gameObject.SetActive(true);
         startQuest.gameObject.SetActive(false);
-        NPCavi.dialogue.sentences[0] = "Aun te faltan monedas";
+        NPCavi.dialogue.sentences[0] = "Aun te faltan monedas por recorger y serpientes que matar";
         NPCavi.dialogue.sentences[1] = "Vuelve cuando las tengas";
 
     }
