@@ -75,6 +75,10 @@ public class test_moveplayer : MonoBehaviour
     public bool canAtack;
     public TextMeshProUGUI finalSentence;
     public GameObject hitboxSword;
+    public GameObject interactbutton;
+    private bool interact;
+    public GameObject npcavi;
+    public GameObject npctrigger;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -88,6 +92,9 @@ public class test_moveplayer : MonoBehaviour
         dashing = false;
         attacking = false;
         canAtack = true;
+        interact = false;
+        interactbutton.SetActive(interact);
+
     }
     // Update is called once per frame
     void Start()
@@ -99,31 +106,73 @@ public class test_moveplayer : MonoBehaviour
     }
     void Update()
     {
+        interactbutton.SetActive(interact);
         animator.SetBool("damaged", _retroceso);
         animator.SetBool("death", death);
         animator.SetBool("dash", dashing);
         animator.SetFloat("Speed", Mathf.Abs(moveInput));
-        if (!dashing)
+
+        if (Mathf.Abs(this.gameObject.transform.position.x - npcavi.gameObject.transform.position.x) > 5.0f)
         {
-            moveInput = Input.GetAxis("Horizontal");
+            interact = false;
+        }
+        else
+        {
+            interact = true;
         }
 
+        if (interact)
+        {
+            if (Input.GetKeyUp(KeyCode.E))
+            {
+
+                if (!inDialogue && canDialogue)
+                {
+                    npctrigger.gameObject.GetComponent<DialogueTrigger>().TriggerDialogue();
+                }
+                if (!gamemanager.questPickup && !gamemanager.questPickupFinished)
+                {
+                    gamemanager.QuestActive();
+                }
+                if (gamemanager.questPickupFinished)
+                {
+                    gamemanager.QuestFinish();
+                }
+            }
+        }
         if (inDialogue)
         {
             canDialogue = false;
             if (Input.GetKeyDown(KeyCode.E))
             {
                 dialogueManager.DisplayNextSentence();
-                if (finalSentence.text == "Gracias por jugar!")
+                if (finalSentence.text == "¡Gracias por jugar!")
                 {
                     audiomanager.Stop("Theme");
                     SceneManager.LoadScene("Credits");
                 }
+                if (!inDialogue && canDialogue)
+                {
+                    npctrigger.gameObject.GetComponent<DialogueTrigger>().TriggerDialogue();
+                }
+                if (!gamemanager.questPickup && !gamemanager.questPickupFinished)
+                {
+                    gamemanager.QuestActive();
+                }
+                if (gamemanager.questPickupFinished)
+                {
+                    gamemanager.QuestFinish();
+                }
             }
 
         }
+
         else
         {
+            if (!dashing)
+            {
+                moveInput = Input.GetAxis("Horizontal");
+            }
 
             if (!death)
             {
@@ -354,24 +403,7 @@ public class test_moveplayer : MonoBehaviour
             }
 
         }
-        if (collision.tag == "dialogue")
-        {
-            if (Input.GetKeyUp(KeyCode.E))
-            {
-                if (!inDialogue && canDialogue)
-                {
-                    collision.gameObject.GetComponent<DialogueTrigger>().TriggerDialogue();
-                }
-                if (!gamemanager.questPickup && !gamemanager.questPickupFinished)
-                {
-                    gamemanager.QuestActive();
-                }
-                if(gamemanager.questPickupFinished)
-                {
-                    gamemanager.QuestFinish();
-                }
-            }
-        }
+
     }
     public void doDamage()
     {

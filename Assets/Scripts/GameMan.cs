@@ -70,8 +70,8 @@ public class GameMan : MonoBehaviour
             if (pickupget.ToString() == totalPickups && snakekill.ToString() == totalSnakes && questPickup)
             {
                 questCompleted.gameObject.SetActive(true);
-                NPCavi.dialogue.sentences[0] = "Muy bien has conseguido todas las monedas";
-                NPCavi.dialogue.sentences[1] = "Gracias por jugar!";
+                NPCavi.dialogue.sentences[0] = "Muy bien has conseguido todas las monedas y has matado a todas las serpientes.";
+                NPCavi.dialogue.sentences[1] = "¡Gracias por jugar!";
                 questPickupFinished = true;
             }
         }
@@ -136,8 +136,8 @@ public class GameMan : MonoBehaviour
         questPickup = true;
         quest.gameObject.SetActive(true);
         startQuest.gameObject.SetActive(false);
-        NPCavi.dialogue.sentences[0] = "Aun te faltan monedas por recorger y serpientes que matar";
-        NPCavi.dialogue.sentences[1] = "Vuelve cuando las tengas";
+        NPCavi.dialogue.sentences[0] = "Aún te faltan monedas por recoger y serpientes que matar. Vuelve cuando lo hayas conseguido.";
+        NPCavi.dialogue.sentences[1] = "Busca en cada rincón del mapa, algunas pueden estar escondidas.";
 
     }
     public void QuestFinish()
@@ -146,5 +146,4 @@ public class GameMan : MonoBehaviour
         quest.gameObject.SetActive(false);
         questPickup = false;
     }
-
 }
