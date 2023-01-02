@@ -111,15 +111,18 @@ public class test_moveplayer : MonoBehaviour
         animator.SetBool("death", death);
         animator.SetBool("dash", dashing);
         animator.SetFloat("Speed", Mathf.Abs(moveInput));
+        if (npcavi != null)
+        {
+            if (Mathf.Abs(this.gameObject.transform.position.x - npcavi.gameObject.transform.position.x) > 5.0f)
+            {
+                interact = false;
+            }
+            else
+            {
+                interact = true;
+            }
+        }
 
-        if (Mathf.Abs(this.gameObject.transform.position.x - npcavi.gameObject.transform.position.x) > 5.0f)
-        {
-            interact = false;
-        }
-        else
-        {
-            interact = true;
-        }
 
         if (interact)
         {
@@ -403,6 +406,14 @@ public class test_moveplayer : MonoBehaviour
             }
 
         }
+        if (collision.tag == "rock")
+        {
+            if (!Damaged && !death && newAtac)
+            {
+                doDamage();
+            }
+            Destroy(collision.gameObject);
+        }
 
     }
     public void doDamage()
@@ -488,9 +499,21 @@ public class test_moveplayer : MonoBehaviour
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(hitboxSword.transform.position, 1f, enemiesLayer);
         foreach (Collider2D hit in hitEnemies)
         {
-            if (hit.tag == "Snake")
+            if (hit.tag == gamemanager.enemytags[0])
             {
                 snake_enemy enemy = hit.transform.GetComponent<snake_enemy>();
+                enemy.takeDamage();
+                cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
+            }
+            if (hit.tag == gamemanager.enemytags[1])
+            {
+                hyena_enemy enemy = hit.transform.GetComponent<hyena_enemy>();
+                enemy.takeDamage();
+                cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
+            }
+            if (hit.tag == gamemanager.enemytags[2])
+            {
+                vultor_enemy enemy = hit.transform.GetComponent<vultor_enemy>();
                 enemy.takeDamage();
                 cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
             }

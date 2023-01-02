@@ -11,6 +11,9 @@ TagManager:
   - dialogue
   - Potion
   - Snake
+  - Hyena
+  - rock
+  - Voltor
   layers:
   - Default
   - TransparentFX
