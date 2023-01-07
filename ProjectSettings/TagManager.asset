@@ -14,6 +14,17 @@ TagManager:
   - Hyena
   - rock
   - Voltor
+  - traps
+  - AudioManager
+  - interact
+  - SceneManager
+  - GameManager
+  - Canvas
+  - InitialCheckPoint
+  - altar
+  - boss
+  - trigger_boss
+  - pared_boss
   layers:
   - Default
   - TransparentFX

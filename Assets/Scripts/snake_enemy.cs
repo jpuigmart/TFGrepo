@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class snake_enemy : MonoBehaviour
@@ -29,11 +30,13 @@ public class snake_enemy : MonoBehaviour
     public int hp;
     public GameMan gammemanager;
     public bool hurt;
+    public int id;
 
 
     private void Awake()
     {
         snake=transform.GetComponent<snake_enemy>();
+        gammemanager = FindObjectOfType<GameMan>();
         snake.detect = true;
         snake.change = true;
         snake.hurt = false;
@@ -49,7 +52,7 @@ public class snake_enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        snake.animator.SetFloat("speed",(float)Mathf.Abs(velocity.x));
+        snake.animator.SetFloat("speed",(float)Mathf.Abs(snake.velocity.x));
         snake.animator.SetBool("hurt", hurt);
         if (Physics2D.Raycast(snake.left_ground_point.transform.position,Vector2.down,0.1f))
         {
@@ -78,7 +81,7 @@ public class snake_enemy : MonoBehaviour
         {
             if (snake.change && snake.detect)
             {
-                snake.random_int = UnityEngine.Random.Range(1, 3);
+                snake.random_int = UnityEngine.Random.Range(1, 4);
 
                 if (snake.random_int == 1)
                 {
@@ -137,9 +140,17 @@ public class snake_enemy : MonoBehaviour
         StartCoroutine(hurting());
         if (snake.hp == 0)
         {
-            gammemanager.updateSnake();
+            gammemanager.updateLlistat(snake.id);
             Destroy(snake.gameObject);
+            if (SceneManager.GetActiveScene().name == "Game")
+            {
+                gammemanager.updateSnake();
+            }
 
         }
+    }
+    private void OnDestroy()
+    {
+        gammemanager.AddToListDeath(snake.id);
     }
 }

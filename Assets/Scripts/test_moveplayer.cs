@@ -76,15 +76,29 @@ public class test_moveplayer : MonoBehaviour
     public TextMeshProUGUI finalSentence;
     public GameObject hitboxSword;
     public GameObject interactbutton;
-    private bool interact;
+    public bool interact;
     public GameObject npcavi;
     public GameObject npctrigger;
+    private altar altar;
+    public static test_moveplayer instance;
+    public interactable interactable;
     private void Awake()
     {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+        DontDestroyOnLoad(gameObject);
         rb = GetComponent<Rigidbody2D>();
         hp = 3;
         color = gameObject.GetComponent<SpriteRenderer>();
         audiomanager = FindObjectOfType<AudioManager>();
+        gamemanager = FindObjectOfType<GameMan>();
         dialogueBox.SetActive(false);
         inDialogue = false;
         canDialogue = true;
@@ -111,36 +125,13 @@ public class test_moveplayer : MonoBehaviour
         animator.SetBool("death", death);
         animator.SetBool("dash", dashing);
         animator.SetFloat("Speed", Mathf.Abs(moveInput));
-        if (npcavi != null)
-        {
-            if (Mathf.Abs(this.gameObject.transform.position.x - npcavi.gameObject.transform.position.x) > 5.0f)
-            {
-                interact = false;
-            }
-            else
-            {
-                interact = true;
-            }
-        }
 
 
         if (interact)
         {
             if (Input.GetKeyUp(KeyCode.E))
             {
-
-                if (!inDialogue && canDialogue)
-                {
-                    npctrigger.gameObject.GetComponent<DialogueTrigger>().TriggerDialogue();
-                }
-                if (!gamemanager.questPickup && !gamemanager.questPickupFinished)
-                {
-                    gamemanager.QuestActive();
-                }
-                if (gamemanager.questPickupFinished)
-                {
-                    gamemanager.QuestFinish();
-                }
+                interactable.Use();
             }
         }
         if (inDialogue)
@@ -152,7 +143,8 @@ public class test_moveplayer : MonoBehaviour
                 if (finalSentence.text == "¡Gracias por jugar!")
                 {
                     audiomanager.Stop("Theme");
-                    SceneManager.LoadScene("Credits");
+                    interact = false;
+                    SceneManager.LoadScene("level1");
                 }
                 if (!inDialogue && canDialogue)
                 {
@@ -200,6 +192,10 @@ public class test_moveplayer : MonoBehaviour
                         }
                         Destroy(dustInstance.gameObject, 0.5f);
                     }
+                    if (Input.GetKey(KeyCode.C) && isJumping && gamemanager.learnDobleJump)
+                    {
+                        lastJumpTime = jumpBufferTime;
+                    }
                     if (Input.GetKeyUp(KeyCode.C))
                     {
                         OnJumpUp();
@@ -224,6 +220,7 @@ public class test_moveplayer : MonoBehaviour
                 {
                     Jump();
                 }
+
                 #endregion
                 #region Timer
                 lastGroundedTime -= Time.deltaTime;
@@ -380,9 +377,20 @@ public class test_moveplayer : MonoBehaviour
         jumpInputReleased = true;
         lastJumpTime = 0;
     }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.tag == "trigger_boss")
+        {
+            gamemanager.boss_fight = true;
+            GameObject gameObject = GameObject.FindGameObjectWithTag("pared_boss");
+            gameObject.GetComponent<Collider2D>().isTrigger = false;
+            Destroy(collision.gameObject);
+        }
+    }
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.tag == gamemanager.enemytags[0] | collision.tag == gamemanager.enemytags[1] | collision.tag == gamemanager.enemytags[2])
+        if (collision.tag == "Enemy" || collision.tag == "boss")
         {
 
             if (!Damaged && !death && newAtac)
@@ -414,7 +422,26 @@ public class test_moveplayer : MonoBehaviour
             }
             Destroy(collision.gameObject);
         }
+        if (collision.tag == "traps")
+        {
+            if (!Damaged && !death && newAtac)
+            {
+                doDamage();
+            }
+        }
+        if (collision.tag == "interact")
+        {
+            interact = true;
+            interactable = collision.GetComponent<interactable>();
+        }
 
+    }
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.tag == "interact")
+        {
+            interact = false;
+        }
     }
     public void doDamage()
     {
@@ -445,6 +472,7 @@ public class test_moveplayer : MonoBehaviour
         if (hp == 0)
         {
             death = true;
+            gamemanager.boss_fight = true;
             audiomanager.Stop("Theme");
             rb.velocity = Vector3.zero;
         }
@@ -499,23 +527,33 @@ public class test_moveplayer : MonoBehaviour
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(hitboxSword.transform.position, 1f, enemiesLayer);
         foreach (Collider2D hit in hitEnemies)
         {
-            if (hit.tag == gamemanager.enemytags[0])
+            if (hit.tag == "Enemy")
             {
-                snake_enemy enemy = hit.transform.GetComponent<snake_enemy>();
-                enemy.takeDamage();
+                if (hit.gameObject.TryGetComponent(out snake_enemy enem))
+                {
+                    snake_enemy enemy = enem;
+                    enem.takeDamage();
+                }
+                if (hit.gameObject.TryGetComponent(out hyena_enemy enem1))
+                {
+                    hyena_enemy enemy = enem1;
+                    enem1.takeDamage();
+                }
+                if (hit.gameObject.TryGetComponent(out vultor_enemy enem2))
+                {
+                    vultor_enemy enemy = enem2;
+                    enem2.takeDamage();
+                }
+
                 cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
             }
-            if (hit.tag == gamemanager.enemytags[1])
+            if (hit.tag == "boss")
             {
-                hyena_enemy enemy = hit.transform.GetComponent<hyena_enemy>();
-                enemy.takeDamage();
-                cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
-            }
-            if (hit.tag == gamemanager.enemytags[2])
-            {
-                vultor_enemy enemy = hit.transform.GetComponent<vultor_enemy>();
-                enemy.takeDamage();
-                cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
+                if (hit.gameObject.TryGetComponent(out boss_enemy enem4))
+                {
+                    boss_enemy enemy = enem4;
+                    enem4.takeDamage();
+                }
             }
 
         }

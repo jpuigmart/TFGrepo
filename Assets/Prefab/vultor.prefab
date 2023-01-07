@@ -77,7 +77,7 @@ GameObject:
   - component: {fileID: 6114745383055520929}
   m_Layer: 3
   m_Name: vultor
-  m_TagString: Voltor
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -229,8 +229,9 @@ MonoBehaviour:
   fixpatrol: 0
   dir: 0
   range: 3
-  rock: {fileID: 0}
-  pic: {fileID: 0}
+  rock: {fileID: 5825665089406970330, guid: c8eac655f19928445b909209b07e157a, type: 3}
+  pic: {fileID: 7001766233666186323}
+  id: 0
 --- !u!95 &6114745383055520929
 Animator:
   serializedVersion: 4

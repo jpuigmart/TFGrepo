@@ -6,7 +6,8 @@ using Cinemachine;
 public class cinemachineShake : MonoBehaviour
 {
     public static cinemachineShake Instance { get; private set; }
-    private CinemachineVirtualCamera cinemachineVirtualCamera;
+    public CinemachineVirtualCamera cinemachineVirtualCamera;
+    private test_moveplayer player;
 
     private float timeShake;
 
@@ -14,6 +15,8 @@ public class cinemachineShake : MonoBehaviour
     {
         Instance = this;
         cinemachineVirtualCamera = GetComponent<CinemachineVirtualCamera>();
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<test_moveplayer>();
+        cinemachineVirtualCamera.Follow = player.transform;
     }
     public void ShakeCamera(float intensity,float time)
     {
@@ -27,6 +30,7 @@ public class cinemachineShake : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if (timeShake > 0)
         {
             timeShake -= Time.deltaTime;

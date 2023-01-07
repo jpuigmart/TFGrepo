@@ -32,9 +32,10 @@ public class vultor_enemy : MonoBehaviour
     bool attacking;
     public GameObject rock;
     public GameObject pic;
-
+    public int id;
     private void Awake()
     {
+        gammemanager = FindObjectOfType<GameMan>();
         vultor = transform.GetComponent<vultor_enemy>();
         vultor.detect = true;
         vultor.change = true;
@@ -52,7 +53,6 @@ public class vultor_enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(vultor.startingX);
         vultor.animator.SetBool("hurt", hurt);
         if (fixpatrol)
         {
@@ -142,7 +142,7 @@ public class vultor_enemy : MonoBehaviour
         StartCoroutine(hurting());
         if (vultor.hp == 0)
         {
-            gammemanager.updateSnake();
+            gammemanager.updateLlistat(vultor.id);
             Destroy(vultor.gameObject);
 
         }
@@ -152,5 +152,9 @@ public class vultor_enemy : MonoBehaviour
         attacking = false;
         yield return new WaitForSeconds(1.5f);
         attacking = true;
+    }
+    private void OnDestroy()
+    {
+        gammemanager.AddToListDeath(vultor.id);
     }
 }

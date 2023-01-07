@@ -6,7 +6,12 @@ public class rock : MonoBehaviour
 {
     public float speed;
     public LayerMask groundLayer;
+    public AudioManager audiomanager;
     private Vector2 impactCheckSize = new Vector2(0.05f, 0.05f);
+    private void Start()
+    {
+        audiomanager = GameObject.FindGameObjectWithTag("AudioManager").GetComponent<AudioManager>();
+    }
     // Update is called once per frame
     void Update()
     {
@@ -17,5 +22,9 @@ public class rock : MonoBehaviour
         }
 
     }
-    
+    public void OnDestroy()
+    {
+        //audiomanager.Play("rock");
+    }
+
 }
