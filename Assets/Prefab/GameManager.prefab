@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5758314536206919219
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5758314536206919217}
+  - component: {fileID: 5758314536206919218}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: GameManager
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5758314536206919217
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5758314536206919219}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5758314536206919218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5758314536206919219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94dc9d7aaf07c364da912d93bb61967e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemytags: []
+  menuUI: {fileID: 0}
+  lifeUI: {fileID: 0}
+  dialogueBox: {fileID: 0}
+  player: {fileID: 0}
+  pickups: []
+  snakes: []
+  quest: {fileID: 0}
+  questPickup: 0
+  learnDobleJump: 0
+  questPickupFinished: 0
+  startQuest: {fileID: 0}
+  questCompleted: {fileID: 0}
+  NPCavi: {fileID: 0}
+  Initialcheckpoint: {x: 0, y: 0, z: 0}
+  checkpointNew: {x: 0, y: 0, z: 0}
+  cinemachineShakev: {fileID: 0}
+  lastscene: 
+  Canvas: {fileID: 0}
+  dialogueManager: {fileID: 0}
+  firstTimeGame: 1
+  llistat_enemies: []
+  llistat_enemies_morts: []
+  enemys: []
+  prefab_snake: {fileID: 652554705150756746, guid: 513c71c2af5f2994a955841da3b92ba6, type: 3}
+  prefab_hyena: {fileID: 2778111569202614610, guid: 5002603634bb2e747a516f0b81c16f31, type: 3}
+  prefab_vultor: {fileID: 6114745383055520935, guid: 30a3d5791e8f97e4190a41da640849d5, type: 3}
+  boss_fight: 0
+  life_extra: {fileID: 0}

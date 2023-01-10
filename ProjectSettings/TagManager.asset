@@ -25,6 +25,15 @@ TagManager:
   - boss
   - trigger_boss
   - pared_boss
+  - bloc_groc
+  - bloc_tronja
+  - bloc_blau
+  - bloc_marro
+  - clau_groc
+  - clau_tronja
+  - clau_blau
+  - clau_marro
+  - PotionExtra
   layers:
   - Default
   - TransparentFX

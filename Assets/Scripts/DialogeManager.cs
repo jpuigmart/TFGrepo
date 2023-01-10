@@ -11,9 +11,19 @@ public class DialogeManager : MonoBehaviour
     private Queue<string> sentences;
     public GameObject DialogueBox;
     public test_moveplayer player;
+    public static DialogeManager instance;
 
     private void Awake()
     {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
         DontDestroyOnLoad(gameObject);
     }
     // Start is called before the first frame update

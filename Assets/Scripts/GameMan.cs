@@ -70,6 +70,7 @@ public class GameMan : MonoBehaviour
     public GameObject prefab_vultor;
     public Dictionary<string, GameObject> enemies_prefabs;
     public bool boss_fight;
+    public Image life_extra;
     private void Awake()
     {
         enemies_prefabs = new Dictionary<string, GameObject>();
@@ -134,10 +135,8 @@ public class GameMan : MonoBehaviour
         }
         menuUI.SetActive(false);
         lifes = lifeUI.GetComponentsInChildren<Image>();
+        life_extra.gameObject.SetActive(false);
 
-        enemytags.Add("Snake");
-        enemytags.Add("Hyena");
-        enemytags.Add("Voltor");
     }
     void LateUpdate()
     {
@@ -149,7 +148,7 @@ public class GameMan : MonoBehaviour
             {
                 questCompleted.gameObject.SetActive(true);
                 NPCavi.dialogue.sentences[0] = "Muy bien has conseguido todas las monedas y has matado a todas las serpientes.";
-                NPCavi.dialogue.sentences[1] = "¡Gracias por jugar!";
+                NPCavi.dialogue.sentences[1] = "¡Volvamos a casa!";
                 questPickupFinished = true;
             }
         }
@@ -180,14 +179,28 @@ public class GameMan : MonoBehaviour
         Time.timeScale = 0;
         isGamePause = true;
     }
+    
     public void takeDamage()
     {
-        lifes[player.hp].gameObject.SetActive(false);
+        if (life_extra.isActiveAndEnabled)
+        {
+            life_extra.gameObject.SetActive(false);
+        }
+        else
+        {
+            player.hp -= 1;
+            lifes[player.hp].gameObject.SetActive(false);
+        }
+
     }
     public void takeHeal()
     {
         Debug.Log(player.hp);
         lifes[player.hp - 1].gameObject.SetActive(true);
+    }
+    public void TakeExtraLife()
+    {
+        life_extra.gameObject.SetActive(true);
     }
     public void deathScene()
     {
@@ -378,5 +391,14 @@ public class GameMan : MonoBehaviour
             }
         }
         return exist;
+    }
+    public void Salir()
+    {
+        Destroy(player.gameObject);
+        Destroy(dialogueManager.gameObject);
+        Destroy(Canvas.gameObject);
+        Time.timeScale = 1;
+        SceneManager.LoadScene("Start");
+        Destroy(gameObject);
     }
 }

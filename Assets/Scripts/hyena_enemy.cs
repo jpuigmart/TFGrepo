@@ -19,7 +19,6 @@ public class hyena_enemy : MonoBehaviour
     public bool isGrounded;
     private bool isLeft;
     public bool isImpact;
-    public Rigidbody2D rb_enemy;
     public hyena_enemy hyena;
     public GameObject player;
     public float speed;
@@ -201,12 +200,10 @@ public class hyena_enemy : MonoBehaviour
     {
         if (!checkplayer && !attacking)
         {
-            Debug.Log("FixedUpdate1");
             transform.Translate(Vector3.right * hyena.speed * Time.deltaTime);
         }
         if (!isGrounded && !attacking)
         {
-            Debug.Log("FixedUpdate2");
             transform.Translate(Vector3.down * speed * Time.deltaTime);
         }
 

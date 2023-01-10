@@ -17,7 +17,7 @@ public class GameOverMenu : MonoBehaviour
     }
     public void Salir()
     {
-        SceneManager.LoadScene("Menu");
+        SceneManager.LoadScene("Start");
     }
     
 }

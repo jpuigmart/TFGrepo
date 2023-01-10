@@ -140,7 +140,7 @@ public class test_moveplayer : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.E))
             {
                 dialogueManager.DisplayNextSentence();
-                if (finalSentence.text == "¡Gracias por jugar!")
+                if (finalSentence.text == "¡Volvamos a casa!")
                 {
                     audiomanager.Stop("Theme");
                     interact = false;
@@ -414,6 +414,11 @@ public class test_moveplayer : MonoBehaviour
             }
 
         }
+        if (collision.tag == "PotionExtra")
+        {
+            gamemanager.TakeExtraLife();
+            Destroy(collision.gameObject);
+        }
         if (collision.tag == "rock")
         {
             if (!Damaged && !death && newAtac)
@@ -434,6 +439,30 @@ public class test_moveplayer : MonoBehaviour
             interact = true;
             interactable = collision.GetComponent<interactable>();
         }
+        if (collision.tag == "clau_blau")
+        {
+            Destroy(collision.gameObject);
+            GameObject tmp = GameObject.FindGameObjectWithTag("bloc_blau");
+            Destroy(tmp.gameObject);
+        }
+        if (collision.tag == "clau_groc")
+        {
+            Destroy(collision.gameObject);
+            GameObject tmp = GameObject.FindGameObjectWithTag("bloc_groc");
+            Destroy(tmp.gameObject);
+        }
+        if (collision.tag == "clau_marro")
+        {
+            Destroy(collision.gameObject);
+            GameObject tmp = GameObject.FindGameObjectWithTag("bloc_marro");
+            Destroy(tmp.gameObject);
+        }
+        if (collision.tag == "clau_tronja")
+        {
+            Destroy(collision.gameObject);
+            GameObject tmp = GameObject.FindGameObjectWithTag("bloc_tronja");
+            Destroy(tmp.gameObject);
+        }
 
     }
     private void OnTriggerExit2D(Collider2D collision)
@@ -450,7 +479,6 @@ public class test_moveplayer : MonoBehaviour
             dashing = false;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
-        this.hp -= 1;
         gamemanager.takeDamage();
         audiomanager.Play("hurt");
         cinemachineShake.Instance.ShakeCamera(5f, 0.1f);

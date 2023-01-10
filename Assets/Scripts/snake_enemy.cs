@@ -31,6 +31,7 @@ public class snake_enemy : MonoBehaviour
     public GameMan gammemanager;
     public bool hurt;
     public int id;
+    public bool death;
 
 
     private void Awake()
@@ -40,6 +41,7 @@ public class snake_enemy : MonoBehaviour
         snake.detect = true;
         snake.change = true;
         snake.hurt = false;
+        death = false;
         snake.hp = 2;
     }
     // Start is called before the first frame update
@@ -52,69 +54,74 @@ public class snake_enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        snake.animator.SetFloat("speed",(float)Mathf.Abs(snake.velocity.x));
-        snake.animator.SetBool("hurt", hurt);
-        if (Physics2D.Raycast(snake.left_ground_point.transform.position,Vector2.down,0.1f))
+        if (!death)
         {
-            snake.isGrounded = true;
-        }
-        else
-        {
-            snake.isGrounded = false;
-            if (snake.detect)
+            snake.animator.SetFloat("speed", (float)Mathf.Abs(snake.velocity.x));
+            snake.animator.SetBool("hurt", hurt);
+            if (Physics2D.Raycast(snake.left_ground_point.transform.position, Vector2.down, 0.1f))
             {
+                snake.isGrounded = true;
+            }
+            else
+            {
+                snake.isGrounded = false;
+                if (snake.detect)
+                {
+                    snake.velocity *= -1;
+                    StartCoroutine(snake.detectColision());
+                }
+            }
+            if (Physics2D.OverlapBox(snake.left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) && snake.detect)
+            {
+                snake.isImpact = true;
                 snake.velocity *= -1;
                 StartCoroutine(snake.detectColision());
             }
-        }
-        if (Physics2D.OverlapBox(snake.left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) && snake.detect)
-        {
-            snake.isImpact = true;
-            snake.velocity *= -1;
-            StartCoroutine(snake.detectColision());
-        }
-        else
-        {
-            snake.isImpact = false;
-        }
-        if (!hurt)
-        {
-            if (snake.change && snake.detect)
+            else
             {
-                snake.random_int = UnityEngine.Random.Range(1, 4);
-
-                if (snake.random_int == 1)
-                {
-                    snake.velocity = Vector3.zero;
-                }
-                if (snake.random_int == 2)
-                {
-                    snake.velocity = new Vector3(1 * speed, 0, 0);
-                }
-                if (snake.random_int == 3)
-                {
-                    snake.velocity = new Vector3(-1 * speed, 0, 0);
-                }
-                StartCoroutine(snake.changeDirection());
+                snake.isImpact = false;
             }
-        }
-        else
-        {
-            snake.velocity = Vector3.zero;
-        }
-        if (snake.velocity.x > 0)
-        {
-            transform.localScale = new Vector3(-5, 5, 0);
-        }
-        else
-        {
-            transform.localScale = new Vector3(5, 5, 0);
+            if (!hurt)
+            {
+                if (snake.change && snake.detect)
+                {
+                    snake.random_int = UnityEngine.Random.Range(1, 4);
+
+                    if (snake.random_int == 1)
+                    {
+                        snake.velocity = Vector3.zero;
+                    }
+                    if (snake.random_int == 2)
+                    {
+                        snake.velocity = new Vector3(1 * speed, 0, 0);
+                    }
+                    if (snake.random_int == 3)
+                    {
+                        snake.velocity = new Vector3(-1 * speed, 0, 0);
+                    }
+                    StartCoroutine(snake.changeDirection());
+                }
+            }
+            else
+            {
+                snake.velocity = Vector3.zero;
+            }
+            if (snake.velocity.x > 0)
+            {
+                transform.localScale = new Vector3(-5, 5, 0);
+            }
+            else
+            {
+                transform.localScale = new Vector3(5, 5, 0);
+            }
         }
     }
     private void FixedUpdate()
     {
-        transform.Translate(snake.velocity);
-
+        if (!death)
+        {
+            transform.Translate(snake.velocity);
+        }
     }
     IEnumerator detectColision()
     {
@@ -141,7 +148,7 @@ public class snake_enemy : MonoBehaviour
         if (snake.hp == 0)
         {
             gammemanager.updateLlistat(snake.id);
-            Destroy(snake.gameObject);
+            Death();
             if (SceneManager.GetActiveScene().name == "Game")
             {
                 gammemanager.updateSnake();
@@ -149,8 +156,22 @@ public class snake_enemy : MonoBehaviour
 
         }
     }
+    public void Death()
+    {
+        death = true;
+        animator.SetTrigger("death");
+        transform.GetComponent<Collider2D>().isTrigger = false;
+        StartCoroutine(animDeath());
+
+    }
+    IEnumerator animDeath()
+    {
+        yield return new WaitForSeconds(0.5f);
+        Destroy(gameObject);
+    }
     private void OnDestroy()
     {
         gammemanager.AddToListDeath(snake.id);
     }
+
 }

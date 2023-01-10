@@ -9,7 +9,7 @@ public class startMenu : MonoBehaviour
     private void Awake()
     {
         audiomanager = FindObjectOfType<AudioManager>();
-        audiomanager.Stop("Run");
+
     }
     public void Jugar()
     {
