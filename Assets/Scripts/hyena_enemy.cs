@@ -21,6 +21,7 @@ public class hyena_enemy : MonoBehaviour
     public bool isImpact;
     public hyena_enemy hyena;
     public GameObject player;
+    public Rigidbody2D rb_hyena;
     public float speed;
     public Vector3 velocity;
     public bool detect;
@@ -42,9 +43,15 @@ public class hyena_enemy : MonoBehaviour
     public float speed_atac;
     public bool followPj = true;
     public int id;
+    public float timing;
+    public bool preattacking;
+    public bool death;
+    public AudioSource audio;
+    public float timing_sound;
     private void Awake()
     {
         hyena = transform.GetComponent<hyena_enemy>();
+        rb_hyena = transform.GetComponent<Rigidbody2D>();
         hyena.detect = true;
         hyena.change = true;
         hyena.hurt = false;
@@ -54,158 +61,156 @@ public class hyena_enemy : MonoBehaviour
         hyena.checkplayer = false;
         hyena.canAtac = true;
         hyena.followPj = true;
+        hyena.preattacking = false;
+        death = false;
         Time.timeScale = 1;
+        timing = 0f;
         speed_idle = 0.1f;
         gammemanager = FindObjectOfType<GameMan>();
+        audio = transform.GetComponent<AudioSource>();
     }
     // Start is called before the first frame update
     void Start()
     {
-        hyena.startingX = hyena.transform.position.x;
-        hyena.velocity = new Vector3(1 * speed_idle, 0, 0);
         Time.timeScale = 1f;
     }
 
     // Update is called once per frame
     void Update()
     {
-        hyena.animator.SetFloat("speed", attacking ? Mathf.Abs(speed_atac) : Mathf.Abs(speed));
-        player = GameObject.FindGameObjectWithTag("Player");
 
-        if (Physics2D.OverlapBox(hyena.left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) && hyena.detect)
+        if (!death)
         {
-            hyena.isImpact = true;
-            hyena.speed *= -1;
-            isLeft = !isLeft;
-            StartCoroutine(hyena.detectColision());
-        }
-        else
-        {
-            hyena.isImpact = false;
-        }
-        hyena.animator.SetBool("hurt", hurt);
-        if (Physics2D.Raycast(hyena.center_ground_point.transform.position, Vector2.down, 0.1f))
-        {
-            isGrounded = true;
-        }
-        else
-        {
-            isGrounded = false;
-        }
-        if (Physics2D.Raycast(hyena.left_ground_point.transform.position, Vector2.down, 0.1f))
-        {
-            hyena.isGrounded = true;
-        }
-        else
-        {
-            if (hyena.detect)
+            timing += Time.deltaTime;
+
+            Debug.Log(hyena.timing);
+            hyena.animator.SetFloat("speed", attacking ? Mathf.Abs(speed_atac) : Mathf.Abs(speed));
+            player = GameObject.FindGameObjectWithTag("Player");
+            hyena.animator.SetBool("hurt", hurt);
+
+            #region Impact
+            if (Physics2D.OverlapBox(hyena.left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) && hyena.detect)
             {
                 hyena.speed *= -1;
                 StartCoroutine(hyena.detectColision());
             }
-        }
-        if (Vector2.Distance(hyena.transform.position, player.transform.position) < 15 && Math.Abs(player.transform.position.y - transform.position.y) < 3)
-        {
-            checkplayer = true;
-        }
-        else
-        {
-            checkplayer = false;
-        }
-        if (!attacking && !hurt && hyena.followPj)
-        {
-            if (checkplayer)
+            #endregion
+            #region Grounded
+            if (Physics2D.Raycast(hyena.center_ground_point.transform.position, Vector2.down, 0.1f))
             {
-                float dist = Vector3.Distance(player.transform.position, transform.position);
-                if (dist <= 15)
+                isGrounded = true;
+            }
+            else
+            {
+                isGrounded = false;
+            }
+            #endregion
+            #region Fall
+            if (!Physics2D.Raycast(hyena.left_ground_point.transform.position, Vector2.down, 0.1f))
+            {
+                if (timing > 2f)
                 {
-                    if (player.transform.position.x > transform.position.x)
+                    speed *= -1;
+                    timing = 0;
+                }
+
+            }
+            #endregion
+            #region checkPlayer
+            if (Vector2.Distance(hyena.transform.position, player.transform.position) < 15 && Math.Abs(player.transform.position.y - transform.position.y) < 2)
+            {
+                checkplayer = true;
+            }
+            else
+            {
+                checkplayer = false;
+            }
+
+            #endregion
+            if (!hurt)
+            {
+                hyena.tag = "Enemy";
+                if (checkplayer)
+                {
+                    timing = 0;
+                    float dist = Vector3.Distance(player.transform.position, transform.position);
+                    if (dist > 1f)
                     {
-                        isLeft = true;
+                        if (player.transform.position.x > transform.position.x)
+                        {
+                            speed = 4f;
+                        }
+                        else
+                        {
+                            speed = -4f;
+                        }
                     }
                     else
                     {
-                        isLeft = false;
+                        speed = 0f;
                     }
-                    //move to target(player) 
 
-                    if (Math.Abs(player.transform.position.y - transform.position.y) > 1)
-                    {
-                        checkplayer = false;
-                    }
-                    if (isGrounded)
-                    {
-                        Debug.Log("Update");
-                        transform.position = Vector2.MoveTowards(transform.position, player.transform.position, speed * Time.deltaTime);
-                    }
+
                     if (dist <= 5 && canAtac)
                     {
                         hyena.prepareAtac();
                     }
 
                 }
+                else
+                {
+                    if (hyena.timing > 2f)
+                    {
+                        hyena.random_int = UnityEngine.Random.Range(1, 4);
 
+                        if (hyena.random_int == 1)
+                        {
+                            hyena.speed = 0f;
+                        }
+                        if (hyena.random_int == 2)
+                        {
+                            hyena.speed = 4f;
+                        }
+                        if (hyena.random_int == 3)
+                        {
+                            hyena.speed = -4f;
+                        }
+                        timing = 0;
+                    }
+                }
             }
             else
             {
-
-                if (hyena.change && hyena.detect)
-                {
-                    hyena.random_int = UnityEngine.Random.Range(1, 4);
-
-                    if (hyena.random_int == 1)
-                    {
-                        hyena.speed = 0f;
-                    }
-                    if (hyena.random_int == 2)
-                    {
-                        hyena.speed = 4f;
-                        isLeft = true;
-                    }
-                    if (hyena.random_int == 3)
-                    {
-                        hyena.speed = -4f;
-                        isLeft = false;
-                    }
-                    StartCoroutine(hyena.changeDirection());
-                }
+                hyena.speed = 0f;
+                hyena.tag = "Untagged";
             }
-        }
-        if (hurt)
-        {
-            transform.Translate(Vector3.zero);
-        }
-        if (attacking)
-        {
-            Debug.Log("HOLA");
-            if (isLeft)
+
+            #region isLeft
+            if (rb_hyena.velocity.x > 0)
+            {
+                isLeft = true;
+                transform.localScale = new Vector3(-5, 5, 0);
+            }
+            if (rb_hyena.velocity.x < 0)
+            {
+                isLeft = false;
+                transform.localScale = new Vector3(5, 5, 0);
+            }
+            #endregion
+            if (attacking || preattacking)
             {
                 transform.Translate(Vector3.right * speed_atac * Time.deltaTime);
             }
-            else
-            {
-                transform.Translate(Vector3.right * -1 * speed_atac * Time.deltaTime);
-            }
-        }
-        if (isLeft)
-        {
-            transform.localScale = new Vector3(-5, 5, 0);
-        }
-        else
-        {
-            transform.localScale = new Vector3(5, 5, 0);
         }
     }
     private void FixedUpdate()
     {
-        if (!checkplayer && !attacking)
+
+        if (!attacking && !preattacking && !death)
         {
-            transform.Translate(Vector3.right * hyena.speed * Time.deltaTime);
+            rb_hyena.velocity = new Vector2(speed, 0);
         }
-        if (!isGrounded && !attacking)
-        {
-            transform.Translate(Vector3.down * speed * Time.deltaTime);
-        }
+
 
     }
     IEnumerator detectColision()
@@ -223,16 +228,13 @@ public class hyena_enemy : MonoBehaviour
     IEnumerator hurting()
     {
         hyena.hurt = true;
-        yield return new WaitForSeconds(0.4f);
+        yield return new WaitForSeconds(1f);
         hyena.hurt = false;
     }
     IEnumerator atac()
     {
         yield return new WaitForSeconds(0.4f);
         attacking = false;
-        yield return new WaitForSeconds(1.5f);
-        followPj = true;
-        speed = 4f;
     }
     IEnumerator canMakeAtac()
     {
@@ -246,17 +248,30 @@ public class hyena_enemy : MonoBehaviour
         StartCoroutine(hurting());
         if (hyena.hp == 0)
         {
-            Debug.Log("Hola");
-            gammemanager.updateSnake();
             gammemanager.updateLlistat(hyena.id);
-            Destroy(hyena.gameObject);
+            hyena.Death();
+            if (SceneManager.GetActiveScene().name == "Game")
+            {
+                gammemanager.updateSnake();
+            }
 
         }
     }
+    public void Death()
+    {
+        rb_hyena.velocity = Vector2.zero;
+        hyena.death = true;
+        animator.SetTrigger("death");
+        transform.tag = "Untagged";
+        StartCoroutine(animDeath());
+    }
+    IEnumerator animDeath()
+    {
+        yield return new WaitForSeconds(0.5f);
+        Destroy(gameObject);
+    }
     public void makeAttack()
     {
-        checkplayer = false;
-        followPj = false;
         attacking = true;
         StartCoroutine(atac());
         StartCoroutine(canMakeAtac());
@@ -269,8 +284,11 @@ public class hyena_enemy : MonoBehaviour
     }
     public void prepareAtac()
     {
-        speed = 0f;
+        audio.Play();
+        preattacking = true;
         animator.SetBool("atac", true);
+        speed_atac = 0f;
+        rb_hyena.velocity = Vector2.zero;
         StartCoroutine(preAtac());
 
     }
@@ -278,7 +296,16 @@ public class hyena_enemy : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
         animator.SetBool("atac", false);
-        speed_atac = 15f;
+        preattacking = false;
+        if (isLeft)
+        {
+            speed_atac = 15f;
+        }
+        else
+        {
+            speed_atac = -15f;
+        }
+
         makeAttack();
 
     }

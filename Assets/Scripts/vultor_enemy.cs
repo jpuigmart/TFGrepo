@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.SocialPlatforms;
 using UnityEngine.UI;
 public class vultor_enemy : MonoBehaviour
@@ -33,6 +34,7 @@ public class vultor_enemy : MonoBehaviour
     public GameObject rock;
     public GameObject pic;
     public int id;
+    public bool death;
     private void Awake()
     {
         gammemanager = FindObjectOfType<GameMan>();
@@ -41,11 +43,13 @@ public class vultor_enemy : MonoBehaviour
         vultor.change = true;
         vultor.hurt = false;
         attacking = true;
+        death = false;
         vultor.hp = 2;
     }
     // Start is called before the first frame update
     void Start()
     {
+
         vultor.startingX = vultor.transform.position.x;
 
     }
@@ -53,69 +57,91 @@ public class vultor_enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        vultor.animator.SetBool("hurt", hurt);
-        if (fixpatrol)
+        if (!death)
         {
 
+            vultor.animator.SetBool("hurt", hurt);
+            if (fixpatrol)
+            {
+
+            }
+            else
+            {
+
+                if (Physics2D.OverlapBox(vultor.left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) && vultor.detect)
+                {
+                    vultor.isImpact = true;
+                    vultor.dir *= -1;
+                    StartCoroutine(vultor.detectColision());
+                }
+                else
+                {
+                    vultor.isImpact = false;
+                }
+                if (!hurt)
+                {
+                    vultor.tag = "Enemy";
+                    if (dir == 0)
+                    {
+                        if (isLeft)
+                        {
+                            dir = 1;
+                        }
+                        else
+                        {
+                            dir = -1;
+                        }
+                    }
+                    if ((vultor.transform.position.x < startingX || vultor.transform.position.x > startingX + range) && change)
+                    {
+                        dir *= -1;
+                        StartCoroutine(vultor.changeDirection());
+                    }
+                }
+                else
+                {
+                    vultor.tag = "Untagged";
+                    dir *= 0;
+                }
+
+            }
+            if (dir == 1)
+            {
+                transform.localScale = new Vector3(-5, 5, 0);
+                isLeft = true;
+            }
+            if (dir == -1)
+            {
+                isLeft = false;
+                transform.localScale = new Vector3(5, 5, 0);
+            }
+
+            if (attacking)
+            {
+                Instantiate(rock, pic.transform.position, Quaternion.identity);
+                StartCoroutine(vultor.atac());
+            }
         }
         else
         {
-
-            if (Physics2D.OverlapBox(vultor.left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) && vultor.detect)
+            if (Physics2D.OverlapBox(transform.position, impactCheckSize, 0, groundLayer))
             {
-                vultor.isImpact = true;
-                vultor.dir *= -1;
-                StartCoroutine(vultor.detectColision());
+                speed = 0f;
+                StartCoroutine(animDeath());
             }
-            else
-            {
-                vultor.isImpact = false;
-            }
-            if (!hurt)
-            {
-                if (dir == 0)
-                {
-                    if (isLeft)
-                    {
-                        dir = 1;
-                    }
-                    else
-                    {
-                        dir = -1;
-                    }
-                }
-                if ((vultor.transform.position.x < startingX || vultor.transform.position.x > startingX + range) && change)
-                {
-                    dir *= -1;
-                    StartCoroutine(vultor.changeDirection());
-                }
-            }
-            else
-            {
-                dir *= 0;
-            }
-
-        }
-        if (dir == 1)
-        {
-            transform.localScale = new Vector3(-5, 5, 0);
-            isLeft = true;
-        }
-        if(dir == -1)
-        {
-            isLeft = false;
-            transform.localScale = new Vector3(5, 5, 0);
-        }
-
-        if (attacking)
-        {
-            Instantiate(rock, pic.transform.position, Quaternion.identity);
-            StartCoroutine(vultor.atac());
         }
     }
     private void FixedUpdate()
     {
-        vultor.transform.Translate(Vector2.right * speed * Time.deltaTime * dir);
+        if (!death)
+        {
+            vultor.transform.Translate(Vector2.right * speed * Time.deltaTime * dir);
+        }
+        else
+        {
+            vultor.transform.Translate(Vector2.down * speed * Time.deltaTime * dir);
+        }
+
 
     }
     IEnumerator detectColision()
@@ -133,7 +159,7 @@ public class vultor_enemy : MonoBehaviour
     IEnumerator hurting()
     {
         vultor.hurt = true;
-        yield return new WaitForSeconds(0.4f);
+        yield return new WaitForSeconds(1f);
         vultor.hurt = false;
     }
     public void takeDamage()
@@ -143,9 +169,26 @@ public class vultor_enemy : MonoBehaviour
         if (vultor.hp == 0)
         {
             gammemanager.updateLlistat(vultor.id);
-            Destroy(vultor.gameObject);
+            vultor.Death();
+            if (SceneManager.GetActiveScene().name == "Game")
+            {
+                gammemanager.updateSnake();
+            }
 
         }
+    }
+    public void Death()
+    {
+        vultor.death = true;
+        speed = 10;
+        dir = 1;
+        animator.SetTrigger("death");
+        transform.tag = "Untagged";
+    }
+    IEnumerator animDeath()
+    {
+        yield return new WaitForSeconds(0.5f);
+        Destroy(gameObject);
     }
     IEnumerator atac()
     {

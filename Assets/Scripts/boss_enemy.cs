@@ -40,12 +40,14 @@ public class boss_enemy : MonoBehaviour
     public SpriteRenderer color;
     public int numatacs;
     public bool preidle;
-
+    public bool death;
+    public AudioManager audiomanager;
     // Start is called before the first frame update
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
         gamemanager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameMan>();
+        audiomanager = GameObject.FindObjectOfType<AudioManager>();
         change = true;
         detect = true;
         attacking1 = false;
@@ -61,196 +63,204 @@ public class boss_enemy : MonoBehaviour
     {
         if (gamemanager.boss_fight)
         {
-            if (animChangeState)
+            if (!death)
             {
 
-            }
-            else
-            {
-                animator.SetFloat("speed", Mathf.Abs(speed));
-                player = GameObject.FindGameObjectWithTag("Player");
-                if (hp < 5)
+                if (animChangeState)
                 {
-                    if (state == 0)
-                    {
-                        if ((Physics2D.OverlapBox(left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) | Physics2D.OverlapBox(right_ground_detect.transform.position, impactCheckSize, 0, groundLayer)) && detect)
-                        {
-                            speed *= -1;
-                            isLeft = !isLeft;
-                            StartCoroutine(detectColision());
-                        }
-                        if (change && detect)
-                        {
-                            random_int = UnityEngine.Random.Range(1, 3);
 
-                            if (random_int == 1)
-                            {
-                                speed = 20f;
-                                isLeft = true;
-                            }
-                            if (random_int == 2)
-                            {
-                                speed = -20f;
-                                isLeft = false;
-                            }
-                            StartCoroutine(changeDirection());
-                        }
-                        if (recharge_atac)
-                        {
-                            StartCoroutine(changestate());
-                        }
-                    }
-                    if (state == 1)
-                    {
-                        if (!preattacking1)
-                        {
-                            hp_tmp = hp;
-                            preMakeAtac1();
-                        }
-                    }
-                    if (state == 2)
-                    {
-                        if (!preattacking2)
-                        {
-                            hp_tmp = hp;
-                            preMakeAtac2();
-                        }
-                    }
-                    if (state == 3)
-                    {
-                        if (!preidle)
-                        {
-                            numatacs = 0;
-                            speed = 0f;
-                            StartCoroutine(idleState());
-                        }
-                    }
                 }
                 else
                 {
-                    if (state == 0)
+                    animator.SetFloat("speed", Mathf.Abs(speed));
+                    player = GameObject.FindGameObjectWithTag("Player");
+                    if (hp < 5)
                     {
-                        if ((Physics2D.OverlapBox(left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) | Physics2D.OverlapBox(right_ground_detect.transform.position, impactCheckSize, 0, groundLayer)) && detect)
+                        if (state == 0)
                         {
-                            speed *= -1;
-                            isLeft = !isLeft;
-                            StartCoroutine(detectColision());
-                        }
-                        if (change && detect)
-                        {
-                            random_int = UnityEngine.Random.Range(1, 3);
-
-                            if (random_int == 1)
+                            if ((Physics2D.OverlapBox(left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) | Physics2D.OverlapBox(right_ground_detect.transform.position, impactCheckSize, 0, groundLayer)) && detect)
                             {
-                                speed = 10f;
-                                isLeft = true;
+                                speed *= -1;
+                                isLeft = !isLeft;
+                                StartCoroutine(detectColision());
                             }
-                            if (random_int == 2)
+                            if (change && detect)
                             {
-                                speed = -10f;
-                                isLeft = false;
-                            }
-                            StartCoroutine(changeDirection());
-                        }
-                        if (recharge_atac)
-                        {
-                            StartCoroutine(changestate());
-                        }
+                                random_int = UnityEngine.Random.Range(1, 3);
 
-                    }
-                    if (state == 1)
-                    {
-                        if (!preattacking1)
+                                if (random_int == 1)
+                                {
+                                    speed = 20f;
+                                    isLeft = true;
+                                }
+                                if (random_int == 2)
+                                {
+                                    speed = -20f;
+                                    isLeft = false;
+                                }
+                                StartCoroutine(changeDirection());
+                            }
+                            if (recharge_atac)
+                            {
+                                StartCoroutine(changestate());
+                            }
+                        }
+                        if (state == 1)
                         {
-                            hp_tmp = hp;
-                            preMakeAtac1();
+                            if (!preattacking1)
+                            {
+                                hp_tmp = hp;
+                                preMakeAtac1();
+                            }
+                        }
+                        if (state == 2)
+                        {
+                            if (!preattacking2)
+                            {
+                                hp_tmp = hp;
+                                preMakeAtac2();
+                            }
+                        }
+                        if (state == 3)
+                        {
+                            if (!preidle)
+                            {
+                                numatacs = 0;
+                                speed = 0f;
+                                StartCoroutine(idleState());
+                            }
                         }
                     }
-                    if (state == 2)
+                    else
                     {
-                        if (!preattacking2)
+                        if (state == 0)
                         {
-                            hp_tmp = hp;
-                            preMakeAtac2();
+                            if ((Physics2D.OverlapBox(left_ground_detect.transform.position, impactCheckSize, 0, groundLayer) | Physics2D.OverlapBox(right_ground_detect.transform.position, impactCheckSize, 0, groundLayer)) && detect)
+                            {
+                                speed *= -1;
+                                isLeft = !isLeft;
+                                StartCoroutine(detectColision());
+                            }
+                            if (change && detect)
+                            {
+                                random_int = UnityEngine.Random.Range(1, 3);
+
+                                if (random_int == 1)
+                                {
+                                    speed = 10f;
+                                    isLeft = true;
+                                }
+                                if (random_int == 2)
+                                {
+                                    speed = -10f;
+                                    isLeft = false;
+                                }
+                                StartCoroutine(changeDirection());
+                            }
+                            if (recharge_atac)
+                            {
+                                StartCoroutine(changestate());
+                            }
+
+                        }
+                        if (state == 1)
+                        {
+                            if (!preattacking1)
+                            {
+                                hp_tmp = hp;
+                                preMakeAtac1();
+                            }
+                        }
+                        if (state == 2)
+                        {
+                            if (!preattacking2)
+                            {
+                                hp_tmp = hp;
+                                preMakeAtac2();
+                            }
+                        }
+                        if (state == 3)
+                        {
+                            if (!preidle)
+                            {
+                                numatacs = 0;
+                                speed = 0f;
+                                StartCoroutine(idleState());
+                            }
                         }
                     }
-                    if (state == 3)
+                }
+                if (!attacking2 && !attacking1)
+                {
+                    if (isLeft)
                     {
-                        if (!preidle)
-                        {
-                            numatacs = 0;
-                            speed = 0f;
-                            StartCoroutine(idleState());
-                        }
+                        transform.localScale = new Vector3(10, 10, 0);
+                    }
+                    else
+                    {
+                        transform.localScale = new Vector3(-10, 10, 0);
                     }
                 }
             }
         }
-        else
-        {
 
-        }
-        if (isLeft)
-        {
-            transform.localScale = new Vector3(10, 10, 0);
-        }
-        else
-        {
-            transform.localScale = new Vector3(-10, 10, 0);
-        }
     }
     private void FixedUpdate()
     {
-        if (!animChangeState)
+        if (!death)
         {
 
-            if (gamemanager.boss_fight)
+            if (!animChangeState)
             {
-                if (attacking1)
-                {
-                    transform.position = Vector3.MoveTowards(transform.position, player_position, speed * Time.deltaTime);
-                }
-                if (postattacking)
-                {
-                    transform.position = Vector3.MoveTowards(transform.position, lastposition, speed * Time.deltaTime);
-                    if (transform.position == lastposition)
-                    {
-                        if (hp_tmp < 5)
-                        {
 
-                            if (timesattack == 1)
+                if (gamemanager.boss_fight)
+                {
+                    if (attacking1)
+                    {
+                        transform.position = Vector3.MoveTowards(transform.position, player_position, speed * Time.deltaTime);
+                    }
+                    if (postattacking)
+                    {
+                        transform.position = Vector3.MoveTowards(transform.position, lastposition, speed * Time.deltaTime);
+                        if (transform.position == lastposition)
+                        {
+                            if (hp_tmp < 5)
                             {
-                                postattacking = false;
-                                preattacking1 = false;
-                                state = 0;
-                                recharge_atac = true;
-                                timesattack = 0;
+
+                                if (timesattack == 1)
+                                {
+                                    postattacking = false;
+                                    preattacking1 = false;
+                                    state = 0;
+                                    recharge_atac = true;
+                                    timesattack = 0;
+                                }
+                                else
+                                {
+                                    postattacking = false;
+                                    preattacking1 = false;
+                                    timesattack += 1;
+                                }
                             }
                             else
                             {
                                 postattacking = false;
                                 preattacking1 = false;
-                                timesattack += 1;
+                                state = 0;
+                                recharge_atac = true;
                             }
-                        }
-                        else
-                        {
-                            postattacking = false;
-                            preattacking1 = false;
-                            state = 0;
-                            recharge_atac = true;
-                        }
 
+                        }
+                    }
+                    else if (!attacking1 && !postattacking)
+                    {
+                        transform.Translate(Vector3.right * speed * Time.deltaTime);
                     }
                 }
-                else if (!attacking1 && !postattacking)
+                else
                 {
-                    transform.Translate(Vector3.right * speed * Time.deltaTime);
-                }
-            }
-            else
-            {
 
+                }
             }
         }
 
@@ -276,6 +286,7 @@ public class boss_enemy : MonoBehaviour
     }
     public void makeAtac2()
     {
+         audiomanager.Play("arrow_boss");
          Instantiate(arrow, attack_point.transform.position, Quaternion.identity);
          StartCoroutine(atac2());
     }
@@ -300,6 +311,14 @@ public class boss_enemy : MonoBehaviour
     IEnumerator Atac1()
     {
         attacking1 = true;
+        if (player.transform.position.x > transform.position.x)
+        {
+            transform.localScale = new Vector3(10, 10, 0);
+        }
+        else
+        {
+            transform.localScale = new Vector3(-10, 10, 0);
+        }
         animator.SetTrigger("atac1");
         yield return new WaitForSeconds(1f);
 
@@ -313,6 +332,17 @@ public class boss_enemy : MonoBehaviour
         {
             speed = 10f;
         }
+        if (hp_tmp < 5)
+        {
+            if (timesattack == 1)
+            {
+                numatacs += 1;
+            }
+        }
+        else
+        {
+            numatacs += 1;
+        }
 
     }
     IEnumerator changestate()
@@ -320,7 +350,7 @@ public class boss_enemy : MonoBehaviour
         recharge_atac = false;
         timesattack = 0;
         yield return new WaitForSeconds(5f);
-        numatacs += 1;
+
         if (numatacs == 3)
         {
             state = 3;
@@ -342,6 +372,14 @@ public class boss_enemy : MonoBehaviour
         if (hp_tmp < 5)
         {
             attacking2 = true;
+            if (player.transform.position.x > transform.position.x)
+            {
+                transform.localScale = new Vector3(10, 10, 0);
+            }
+            else
+            {
+                transform.localScale = new Vector3(-10, 10, 0);
+            }
             animator.SetTrigger("atac2");
             yield return new WaitForSeconds(0.5f);
             attacking2 = false;
@@ -351,21 +389,32 @@ public class boss_enemy : MonoBehaviour
                 preattacking2 = false;
                 speed = 20f;
                 state = 0;
+                numatacs += 1;
                 recharge_atac = true;
             }
             else
             {
                 makeAtac2();
             }
+
         }
         else
         {
             attacking2 = true;
+            if (player.transform.position.x > transform.position.x)
+            {
+                transform.localScale = new Vector3(10, 10, 0);
+            }
+            else
+            {
+                transform.localScale = new Vector3(-10, 10, 0);
+            }
             animator.SetTrigger("atac2");
             yield return new WaitForSeconds(0.5f);
             attacking2 = false;
             preattacking2 = false;
             speed = 10f;
+            numatacs += 1;
             state = 0;
             recharge_atac = true;
         }
@@ -375,7 +424,7 @@ public class boss_enemy : MonoBehaviour
     {
         animChangeState = true;
         animator.SetTrigger("power_up");
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(2.5f);
         animChangeState = false;
     }
     public void takeDamage()
@@ -383,7 +432,6 @@ public class boss_enemy : MonoBehaviour
         hp -= 1;
         StartCoroutine(cooldownDamage());
         StartCoroutine(damageChangeColor());
-        Debug.Log("Damaged");
         if (hp == 4)
         {
             StartCoroutine(animChangeStates());
@@ -392,17 +440,34 @@ public class boss_enemy : MonoBehaviour
         {
             GameObject tmp = GameObject.FindGameObjectWithTag("pared_boss");
             tmp.SetActive(false);
-            SceneManager.LoadScene("Credits");
-            Destroy(gameObject);
+            Death();
+
         }
+
+    }
+    public void Death()
+    {
+        speed = 0;
+        death = true;
+        audiomanager.Stop("boss_fight");
+        audiomanager.Stop("run_concrete");
+        animator.SetTrigger("death");
+        transform.tag = "Untagged";
+        StartCoroutine(animDeath());
+    }
+    IEnumerator animDeath()
+    {
+        yield return new WaitForSeconds(1.5f);
+        SceneManager.LoadScene("Credits");
+        Destroy(gameObject);
 
     }
     IEnumerator damageChangeColor()
     {
         while (Damaged)
         {
-            color.color = Color.black;
-            yield return new WaitForSeconds(0.1f);
+            color.color = Color.blue;
+            yield return new WaitForSeconds(0.2f);
             color.color = Color.white;
             yield return new WaitForSeconds(0.4f);
         }
@@ -416,8 +481,10 @@ public class boss_enemy : MonoBehaviour
     IEnumerator idleState()
     {
         preidle = true;
-        yield return new WaitForSeconds(1.5f);
+        animator.SetTrigger("recharge");
+        yield return new WaitForSeconds(3f);
         state = 0;
+        recharge_atac = true;
         preidle = false;
 
     }

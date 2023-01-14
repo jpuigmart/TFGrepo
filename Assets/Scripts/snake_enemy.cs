@@ -32,32 +32,41 @@ public class snake_enemy : MonoBehaviour
     public bool hurt;
     public int id;
     public bool death;
-
+    public AudioSource audio;
+    public float timing_sound;
 
     private void Awake()
     {
         snake=transform.GetComponent<snake_enemy>();
         gammemanager = FindObjectOfType<GameMan>();
+        audio = transform.GetComponent<AudioSource>();
         snake.detect = true;
         snake.change = true;
         snake.hurt = false;
         death = false;
         snake.hp = 2;
+        timing_sound = 0;
     }
     // Start is called before the first frame update
     void Start()
     {
         snake.velocity = new Vector3(1 * speed, 0, 0);
-
+        Time.timeScale = 1f;
     }
 
     // Update is called once per frame
     void Update()
     {
+        timing_sound += Time.deltaTime;
         if (!death)
         {
             snake.animator.SetFloat("speed", (float)Mathf.Abs(snake.velocity.x));
             snake.animator.SetBool("hurt", hurt);
+            if (timing_sound > 4)
+            {
+                audio.Play(0);  
+                timing_sound = 0;
+            }
             if (Physics2D.Raycast(snake.left_ground_point.transform.position, Vector2.down, 0.1f))
             {
                 snake.isGrounded = true;
@@ -83,6 +92,7 @@ public class snake_enemy : MonoBehaviour
             }
             if (!hurt)
             {
+                snake.tag = "Enemy";
                 if (snake.change && snake.detect)
                 {
                     snake.random_int = UnityEngine.Random.Range(1, 4);
@@ -104,13 +114,14 @@ public class snake_enemy : MonoBehaviour
             }
             else
             {
+                snake.tag = "Untagged";
                 snake.velocity = Vector3.zero;
             }
             if (snake.velocity.x > 0)
             {
                 transform.localScale = new Vector3(-5, 5, 0);
             }
-            else
+            if (snake.velocity.x < 0)
             {
                 transform.localScale = new Vector3(5, 5, 0);
             }
@@ -138,7 +149,7 @@ public class snake_enemy : MonoBehaviour
     IEnumerator hurting()
     {
         snake.hurt = true;
-        yield return new WaitForSeconds(0.4f);
+        yield return new WaitForSeconds(1f);
         snake.hurt = false;
     }
     public void takeDamage()
@@ -160,7 +171,7 @@ public class snake_enemy : MonoBehaviour
     {
         death = true;
         animator.SetTrigger("death");
-        transform.GetComponent<Collider2D>().isTrigger = false;
+        transform.tag = "Untagged";
         StartCoroutine(animDeath());
 
     }

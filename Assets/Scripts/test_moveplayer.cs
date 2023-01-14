@@ -82,8 +82,14 @@ public class test_moveplayer : MonoBehaviour
     private altar altar;
     public static test_moveplayer instance;
     public interactable interactable;
+    private bool final_scene1;
+    public altar altar1;
+    public bool extralife;
+    private bool isGrounded;
+    
     private void Awake()
     {
+        
         if (instance == null)
         {
             instance = this;
@@ -107,12 +113,14 @@ public class test_moveplayer : MonoBehaviour
         attacking = false;
         canAtack = true;
         interact = false;
-        interactbutton.SetActive(interact);
-
+        final_scene1 = false;
+        extralife = false;
+        isGrounded = false;
     }
     // Update is called once per frame
     void Start()
     {
+
         gravityScale = rb.gravityScale;
         death = false;
         animationDie = false;
@@ -124,8 +132,11 @@ public class test_moveplayer : MonoBehaviour
         animator.SetBool("damaged", _retroceso);
         animator.SetBool("death", death);
         animator.SetBool("dash", dashing);
-        animator.SetFloat("Speed", Mathf.Abs(moveInput));
-
+        animator.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
+        if (SceneManager.GetActiveScene().name == "level1")
+        {
+            altar1 = GameObject.FindObjectOfType<altar>();
+        }
 
         if (interact)
         {
@@ -139,12 +150,18 @@ public class test_moveplayer : MonoBehaviour
             canDialogue = false;
             if (Input.GetKeyDown(KeyCode.E))
             {
+                if (final_scene1)
+                {
+                    audiomanager.Stop("Theme");
+                    audiomanager.Stop("Run");
+                    interact = false;
+                    SceneManager.LoadScene("mitad");
+                }
                 dialogueManager.DisplayNextSentence();
                 if (finalSentence.text == "¡Volvamos a casa!")
                 {
-                    audiomanager.Stop("Theme");
-                    interact = false;
-                    SceneManager.LoadScene("level1");
+                    final_scene1 = true;
+
                 }
                 if (!inDialogue && canDialogue)
                 {
@@ -158,7 +175,9 @@ public class test_moveplayer : MonoBehaviour
                 {
                     gamemanager.QuestFinish();
                 }
+
             }
+
 
         }
 
@@ -178,25 +197,25 @@ public class test_moveplayer : MonoBehaviour
 
                 if (!_retroceso | !dashing)
                 {
-                    if (Input.GetKey(KeyCode.C) && !isJumping)
+                    if (Input.GetKey(KeyCode.C) && !isJumping && !_retroceso)
                     {
                         lastJumpTime = jumpBufferTime;
-                        if (isLeft && dustInstance == null)
+                        if (isLeft && dustInstance == null && isGrounded)
                         {
                             dustInstance = Instantiate(dust, groundCheckPoint.transform.position + Vector3.right, Quaternion.identity);
 
                         }
-                        else if (dustInstance == null && !isLeft)
+                        else if (dustInstance == null && !isLeft && isGrounded)
                         {
                             dustInstance = Instantiate(dust, groundCheckPoint.transform.position - Vector3.right, Quaternion.identity);
                         }
                         Destroy(dustInstance.gameObject, 0.5f);
                     }
-                    if (Input.GetKey(KeyCode.C) && isJumping && gamemanager.learnDobleJump)
+                    if (Input.GetKey(KeyCode.C) && isJumping && gamemanager.learnDobleJump && !_retroceso)
                     {
                         lastJumpTime = jumpBufferTime;
                     }
-                    if (Input.GetKeyUp(KeyCode.C))
+                    if (Input.GetKeyUp(KeyCode.C) && !_retroceso)
                     {
                         OnJumpUp();
                     }
@@ -250,23 +269,46 @@ public class test_moveplayer : MonoBehaviour
             {
                 lastGroundedTime = jumpInFallTime;
                 animator.SetBool("isJumping", false);
+                isGrounded = true;
                 if (!dashing)
                 {
                     canDash = true;
                 }
                 if (Mathf.Abs(rb.velocity.x) > 0.01)
                 {
-                    audiomanager.Unpause("Run");
+                    if (SceneManager.GetActiveScene().name == "Game" && Time.timeScale == 1)
+                    {
+                        audiomanager.Unpause("Run");
+                    }
+                    if (SceneManager.GetActiveScene().name == "level1" && Time.timeScale == 1)
+                    {
+                        audiomanager.Unpause("run_concrete");
+                    }
                 }
                 else
                 {
-                    audiomanager.Pause("Run");
+                    if (SceneManager.GetActiveScene().name == "Game" && Time.timeScale == 1)
+                    {
+                        audiomanager.Pause("Run");
+                    }
+                    if (SceneManager.GetActiveScene().name == "level1" && Time.timeScale == 1)
+                    {
+                        audiomanager.Pause("run_concrete");
+                    }
                 }
             }
             else
             {
-                audiomanager.Pause("Run");
+                if (SceneManager.GetActiveScene().name == "Game")
+                {
+                    audiomanager.Pause("Run");
+                }
+                if (SceneManager.GetActiveScene().name == "level1")
+                {
+                    audiomanager.Pause("run_concrete");
+                }
                 animator.SetBool("isJumping", true);
+                isGrounded = false;
             }
         }
     }
@@ -276,6 +318,7 @@ public class test_moveplayer : MonoBehaviour
         if (inDialogue)
         {
             rb.velocity = Vector2.zero;
+            animator.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
         }
         else
         {
@@ -383,6 +426,8 @@ public class test_moveplayer : MonoBehaviour
         if (collision.tag == "trigger_boss")
         {
             gamemanager.boss_fight = true;
+            audiomanager.Stop("Theme2");
+            audiomanager.Play("boss_fight");
             GameObject gameObject = GameObject.FindGameObjectWithTag("pared_boss");
             gameObject.GetComponent<Collider2D>().isTrigger = false;
             Destroy(collision.gameObject);
@@ -409,6 +454,7 @@ public class test_moveplayer : MonoBehaviour
             if (this.hp < 3)
             {
                 this.hp += 1;
+                audiomanager.Play("potion");
                 gamemanager.takeHeal();
                 Destroy(collision.gameObject);
             }
@@ -416,6 +462,7 @@ public class test_moveplayer : MonoBehaviour
         }
         if (collision.tag == "PotionExtra")
         {
+            audiomanager.Play("potion");
             gamemanager.TakeExtraLife();
             Destroy(collision.gameObject);
         }
@@ -441,18 +488,24 @@ public class test_moveplayer : MonoBehaviour
         }
         if (collision.tag == "clau_blau")
         {
+            altar1.clau_blava = true;
+            audiomanager.Play("key");
             Destroy(collision.gameObject);
             GameObject tmp = GameObject.FindGameObjectWithTag("bloc_blau");
             Destroy(tmp.gameObject);
         }
         if (collision.tag == "clau_groc")
         {
+            altar1.clau_groga = true;
+            audiomanager.Play("key");
             Destroy(collision.gameObject);
             GameObject tmp = GameObject.FindGameObjectWithTag("bloc_groc");
             Destroy(tmp.gameObject);
         }
         if (collision.tag == "clau_marro")
         {
+            altar1.clau_marro = true;
+            audiomanager.Play("key");
             Destroy(collision.gameObject);
             GameObject tmp = GameObject.FindGameObjectWithTag("bloc_marro");
             Destroy(tmp.gameObject);
@@ -460,6 +513,8 @@ public class test_moveplayer : MonoBehaviour
         if (collision.tag == "clau_tronja")
         {
             Destroy(collision.gameObject);
+            altar1.clau_tronja = true;            
+            audiomanager.Play("key");
             GameObject tmp = GameObject.FindGameObjectWithTag("bloc_tronja");
             Destroy(tmp.gameObject);
         }
@@ -500,8 +555,9 @@ public class test_moveplayer : MonoBehaviour
         if (hp == 0)
         {
             death = true;
-            gamemanager.boss_fight = true;
+            gamemanager.boss_fight = false;
             audiomanager.Stop("Theme");
+            audiomanager.Stop("boss_fight");
             rb.velocity = Vector3.zero;
         }
     }
@@ -555,34 +611,28 @@ public class test_moveplayer : MonoBehaviour
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(hitboxSword.transform.position, 1f, enemiesLayer);
         foreach (Collider2D hit in hitEnemies)
         {
-            if (hit.tag == "Enemy")
+            if (hit.tag == "snake_hitbox")
             {
-                if (hit.gameObject.TryGetComponent(out snake_enemy enem))
-                {
-                    snake_enemy enemy = enem;
-                    enem.takeDamage();
-                }
-                if (hit.gameObject.TryGetComponent(out hyena_enemy enem1))
-                {
-                    hyena_enemy enemy = enem1;
-                    enem1.takeDamage();
-                }
-                if (hit.gameObject.TryGetComponent(out vultor_enemy enem2))
-                {
-                    vultor_enemy enemy = enem2;
-                    enem2.takeDamage();
-                }
+                snake_enemy enemy = hit.gameObject.GetComponentInParent<snake_enemy>();
+                enemy.takeDamage();
+            }
+            if (hit.tag == "vultor_hitbox")
+            {
+                vultor_enemy enemy = hit.gameObject.GetComponentInParent<vultor_enemy>();
+                enemy.takeDamage();
+            }
+            if (hit.tag == "hyena_hitbox")
+            {
+                hyena_enemy enemy = hit.gameObject.GetComponentInParent<hyena_enemy>();
+                enemy.takeDamage();
+            }
 
-                cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
+            if (hit.tag == "boss_hitbox")
+            {  
+                boss_enemy enemy = hit.gameObject.GetComponentInParent<boss_enemy>();
+                enemy.takeDamage();
             }
-            if (hit.tag == "boss")
-            {
-                if (hit.gameObject.TryGetComponent(out boss_enemy enem4))
-                {
-                    boss_enemy enemy = enem4;
-                    enem4.takeDamage();
-                }
-            }
+            cinemachineShake.Instance.ShakeCamera(5f, 0.1f);
 
         }
     }
@@ -594,4 +644,5 @@ public class test_moveplayer : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         canAtack = true;
     }
+
 }

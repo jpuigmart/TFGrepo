@@ -13,8 +13,6 @@ public class startMenu : MonoBehaviour
     }
     public void Jugar()
     {
-        audiomanager.Play("Theme");
-        audiomanager.Play("Run");
         SceneManager.LoadScene("Game");
     }
     public void Sortir()

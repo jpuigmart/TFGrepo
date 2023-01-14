@@ -14,6 +14,10 @@ public class GameOverMenu : MonoBehaviour
     public void Reintentar()
     {
         SceneManager.LoadScene(gameMan.lastscene);
+        if (gameMan.lastscene == "Game")
+        {
+            Destroy(gameMan.gameObject);
+        }
     }
     public void Salir()
     {

@@ -46,14 +46,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sounds:
   - name: Theme
-    audioClip: {fileID: 8300000, guid: 87263bb8f5309ad4d9c857457918effe, type: 3}
+    audioClip: {fileID: 8300000, guid: 39a8162a9e042ea4d830d28e21fc19bf, type: 3}
     volume: 0.109
     pitch: 1
     loop: 1
     source: {fileID: 0}
   - name: Run
     audioClip: {fileID: 8300000, guid: d2e1002f0508022438b792a54b08e4eb, type: 3}
-    volume: 0.025
+    volume: 0.014
     pitch: 1
     loop: 1
     source: {fileID: 0}
@@ -66,6 +66,48 @@ MonoBehaviour:
   - name: hurt
     audioClip: {fileID: 8300000, guid: ad10700ffe0ccaa4b80a1727b8b612fd, type: 3}
     volume: 0.065
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: run_concrete
+    audioClip: {fileID: 8300000, guid: 575040a4b105e694bb0a24dafca5ee14, type: 3}
+    volume: 0.028
+    pitch: 1
+    loop: 1
+    source: {fileID: 0}
+  - name: Theme2
+    audioClip: {fileID: 8300000, guid: 58004460905c249419023b1b11592c76, type: 3}
+    volume: 0.109
+    pitch: 1
+    loop: 1
+    source: {fileID: 0}
+  - name: boss_fight
+    audioClip: {fileID: 8300000, guid: 97ca436c0524c814bb75767a9cefdcb6, type: 3}
+    volume: 0.109
+    pitch: 1
+    loop: 1
+    source: {fileID: 0}
+  - name: potion
+    audioClip: {fileID: 8300000, guid: 087d03f15fe16094296d6ec033a3753e, type: 3}
+    volume: 0.337
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: key
+    audioClip: {fileID: 8300000, guid: 7260713f73cb92646b7d35745161d583, type: 3}
+    volume: 0.307
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: arrow_boss
+    audioClip: {fileID: 8300000, guid: 346500ea11a26394b8161f9bcdb59c4e, type: 3}
+    volume: 0.113
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: altar
+    audioClip: {fileID: 8300000, guid: ffd20bef02d76874eb2dec590a29b78d, type: 3}
+    volume: 0.325
     pitch: 1
     loop: 0
     source: {fileID: 0}

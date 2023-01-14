@@ -34,6 +34,10 @@ TagManager:
   - clau_blau
   - clau_marro
   - PotionExtra
+  - boss_hitbox
+  - hyena_hitbox
+  - vultor_hitbox
+  - snake_hitbox
   layers:
   - Default
   - TransparentFX

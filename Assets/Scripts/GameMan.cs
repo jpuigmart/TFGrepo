@@ -71,6 +71,14 @@ public class GameMan : MonoBehaviour
     public Dictionary<string, GameObject> enemies_prefabs;
     public bool boss_fight;
     public Image life_extra;
+    public bool clau_blava;
+    public bool clau_groga;
+    public bool clau_marro;
+    public bool clau_tronja;
+    public AudioManager audioManager;
+    public GameObject image_quest;
+    public GameObject cartel;
+    public GameObject controlsUI;
     private void Awake()
     {
         enemies_prefabs = new Dictionary<string, GameObject>();
@@ -80,6 +88,10 @@ public class GameMan : MonoBehaviour
         enemies_prefabs.Add("hyena", prefab_hyena);
         enemies_prefabs.Add("vultor", prefab_vultor);
         learnDobleJump = false;
+        clau_blava = false;
+        clau_groga = false;
+        clau_marro = false;
+        clau_tronja = false;
         boss_fight = false;
         if (instance == null)
         {
@@ -92,7 +104,7 @@ public class GameMan : MonoBehaviour
         }
         SceneManager.sceneLoaded += OnSceneLoaded;
         Initialcheckpoint = GameObject.FindGameObjectWithTag("InitialCheckPoint").transform.position;
-
+        audioManager = GameObject.FindObjectOfType<AudioManager>();
         Canvas = GameObject.FindGameObjectWithTag("Canvas").gameObject;
         dialogueManager = FindObjectOfType<DialogeManager>();
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<test_moveplayer>();
@@ -108,6 +120,9 @@ public class GameMan : MonoBehaviour
         Debug.Log("NewCheckPoint");
         player.transform.position = checkpointNew;
         quest.gameObject.SetActive(false);
+        controlsUI.gameObject.SetActive(false); 
+        cartel.gameObject.SetActive(false);
+        image_quest.gameObject.SetActive(false);
         if (SceneManager.GetActiveScene().name == "Game")
         {
             pickups = GameObject.FindGameObjectsWithTag("Pickup");
@@ -170,12 +185,50 @@ public class GameMan : MonoBehaviour
     public void Resume()
     {
         menuUI.SetActive(false);
+        UnhideHealth();
+        audioManager.Unpause("Run");
+        audioManager.Unpause("Theme");
+        if (SceneManager.GetActiveScene().name == "Game" && questPickup)
+        {
+            quest.gameObject.SetActive(true);
+            cartel.gameObject.SetActive(true);
+            image_quest.gameObject.SetActive(true);
+        }
+        if (SceneManager.GetActiveScene().name == "level1" && !boss_fight)
+        {
+            audioManager.Unpause("Theme2");
+            audioManager.Unpause("run_concrete");
+        }
+        if (SceneManager.GetActiveScene().name == "level1" && boss_fight)
+        {
+            audioManager.Unpause("boss_fight");
+            audioManager.Unpause("run_concrete");
+        }
         Time.timeScale = 1;
         isGamePause = false;
     }
     public void Pause()
     {
         menuUI.SetActive(true);
+        HideHealt();
+        audioManager.Pause("Run");
+        audioManager.Pause("Theme");
+        if (SceneManager.GetActiveScene().name == "Game" && questPickup)
+        {
+            quest.gameObject.SetActive(false);
+            cartel.gameObject.SetActive(false);
+            image_quest.gameObject.SetActive(false);
+        }
+        if (SceneManager.GetActiveScene().name == "level1" && !boss_fight)
+        {
+            audioManager.Pause("Theme2");
+            audioManager.Pause("run_concrete");
+        }
+        if (SceneManager.GetActiveScene().name == "level1" && boss_fight)
+        {
+            audioManager.Pause("boss_fight");
+            audioManager.Pause("run_concrete");
+        }
         Time.timeScale = 0;
         isGamePause = true;
     }
@@ -185,6 +238,7 @@ public class GameMan : MonoBehaviour
         if (life_extra.isActiveAndEnabled)
         {
             life_extra.gameObject.SetActive(false);
+            player.extralife = false;
         }
         else
         {
@@ -201,11 +255,32 @@ public class GameMan : MonoBehaviour
     public void TakeExtraLife()
     {
         life_extra.gameObject.SetActive(true);
+        player.extralife = true;
     }
     public void deathScene()
     {
-        player.gameObject.SetActive(false);
-        SceneManager.LoadScene("Game Over");
+        if (SceneManager.GetActiveScene().name == "Game")
+        {
+            Destroy(player.gameObject);
+            Destroy(dialogueManager.gameObject);
+            Destroy(Canvas.gameObject);
+            Time.timeScale = 1;
+            SceneManager.LoadScene("Game Over");
+        }
+        else
+        {
+            if (boss_fight)
+            {
+                audioManager.Stop("boss_fight");
+            }
+            else
+            {
+                audioManager.Stop("Theme2");
+            }
+            player.gameObject.SetActive(false);
+            SceneManager.LoadScene("Game Over");
+        }
+
 
     }
     public void updatePickup()
@@ -229,8 +304,10 @@ public class GameMan : MonoBehaviour
         UpdateLlistatEnemies();
         questPickup = true;
         quest.gameObject.SetActive(true);
+        cartel.gameObject.SetActive(true);
+        image_quest.gameObject.SetActive(true);
         startQuest.gameObject.SetActive(false);
-        NPCavi.dialogue.sentences[0] = "Aún te faltan monedas por recoger y serpientes que matar. Vuelve cuando lo hayas conseguido.";
+        NPCavi.dialogue.sentences[0] = "Aun te faltan monedas por recoger y serpientes que matar. Vuelve cuando lo hayas conseguido.";
         NPCavi.dialogue.sentences[1] = "Busca en cada rincón del mapa, algunas pueden estar escondidas.";
 
     }
@@ -239,6 +316,8 @@ public class GameMan : MonoBehaviour
         if (SceneManager.GetActiveScene().name == "Game")
         {
             questCompleted.gameObject.SetActive(false);
+            cartel.gameObject.SetActive(false);
+            image_quest.gameObject.SetActive(false);
             quest.gameObject.SetActive(false);
             questPickup = false;
             learnDobleJump = true;
@@ -255,15 +334,28 @@ public class GameMan : MonoBehaviour
     }
     public void UpdateCheckpoint(Vector3 checkpoint)
     {
+        audioManager.Play("altar");
         checkpointNew = checkpoint;
     }
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         menuUI.SetActive(false);
+        controlsUI.gameObject.SetActive(false);
         quest.gameObject.SetActive(false);
+        cartel.gameObject.SetActive(false);
+        image_quest.gameObject.SetActive(false);
         llistat_enemies.Clear();
         llistat_enemies_morts.Clear();
         UpdateLlistatEnemies();
+        if (scene.name == "Game")
+        {
+            audioManager.Play("Run");
+            audioManager.Play("Theme");
+        }
+        if (scene.name == "Credits")
+        {
+            audioManager.Play("Theme");
+        }
         if ((scene.name == "Game" | scene.name == "level1") && !firstTimeGame)
         {
             
@@ -274,19 +366,73 @@ public class GameMan : MonoBehaviour
             cinemachineShakev = FindObjectOfType<cinemachineShake>();
             cinemachineShakev.cinemachineVirtualCamera.Follow = player.transform;
             player.gameObject.SetActive(true);
+
+            if (scene.name == "level1")
+            {
+                audioManager.Play("run_concrete");
+                audioManager.Play("Theme2");
+                if (clau_blava)
+                {
+                    GameObject porta_blava = GameObject.FindGameObjectWithTag("bloc_blau");
+                    GameObject clau_blava1 = GameObject.FindGameObjectWithTag("clau_blau");
+                    Destroy(porta_blava.gameObject);
+                    Destroy(clau_blava1.gameObject);
+                }
+                if (clau_marro)
+                {
+                    GameObject porta_marro = GameObject.FindGameObjectWithTag("bloc_marro");
+                    GameObject clau_marro1 = GameObject.FindGameObjectWithTag("clau_marro");
+                    Destroy(porta_marro.gameObject);
+                    Destroy(clau_marro1.gameObject);
+                }
+                if (clau_groga)
+                {
+                    GameObject porta_groga = GameObject.FindGameObjectWithTag("bloc_groc");
+                    GameObject clau_groga1 = GameObject.FindGameObjectWithTag("clau_groc");
+                    Destroy(porta_groga.gameObject);
+                    Destroy(clau_groga1.gameObject);
+                }
+                if (clau_tronja)
+                {
+                    GameObject porta_tronja = GameObject.FindGameObjectWithTag("bloc_tronja");
+                    GameObject clau_tronja1 = GameObject.FindGameObjectWithTag("clau_tronja");
+                    Destroy(porta_tronja.gameObject);
+                    Destroy(clau_tronja1.gameObject);
+                }
+
+
+            }
             if (firstTimeLevel)
             {
+                audioManager.Play("Theme2");
+                audioManager.Play("run_concrete");
                 Initialcheckpoint = GameObject.FindGameObjectWithTag("InitialCheckPoint").transform.position;
                 checkpointNew = Initialcheckpoint;
                 firstTimeLevel = false;
             }
             if (player.death)
             {
-                RevivePlayer();
-                player.death = false;
+                if (scene.name == "Game")
+                {
+
+                }
+                else
+                {
+                    RevivePlayer();
+                    player.death = false;
+                }
+
             }
             
             player.transform.position = checkpointNew;
+        }
+        if (scene.name == "mitad")
+        {
+            HideHealt();
+        }
+        if (scene.name != "mitad" && !firstTimeGame)
+        {
+            UnhideHealth();
         }
         firstTimeGame = false;
     }
@@ -400,5 +546,37 @@ public class GameMan : MonoBehaviour
         Time.timeScale = 1;
         SceneManager.LoadScene("Start");
         Destroy(gameObject);
+    }
+    public void HideHealt()
+    {
+        foreach(Image life in lifes)
+        {
+            life.gameObject.SetActive(false);
+        }
+        if (life_extra.IsActive())
+        {
+            life_extra.gameObject.SetActive(false);
+        }
+    }
+    public void UnhideHealth()
+    {
+        for (int i = 0; i < player.hp; i++)
+        {
+            lifes[i].gameObject.SetActive(true);
+        }
+        if (player.extralife)
+        {
+            life_extra.gameObject.SetActive(true);
+        }
+    }
+    public void goMenuControls()
+    {
+        menuUI.gameObject.SetActive(false);
+        controlsUI.gameObject.SetActive(true);
+    }
+    public void exitMenuControls()
+    {
+        controlsUI.gameObject.SetActive(false);
+        menuUI.gameObject.SetActive(true);
     }
 }
